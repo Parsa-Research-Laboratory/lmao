@@ -1,1 +1,1 @@
-# lava-bo-vsa
+# Hyperdimensional Bayesian Optimization in Lava
