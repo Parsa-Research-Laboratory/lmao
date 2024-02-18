@@ -2,7 +2,7 @@ import argparse
 from omegaconf import DictConfig
 import os
 
-from test_functions import function_factory, VALID_FUNCTIONS
+from hdbo.factory import function_factory, VALID_FUNCTIONS
 
 DESCRIPTION = "Hyperdimensional Bayesian Optimization in Lava"
 
