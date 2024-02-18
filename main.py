@@ -2,6 +2,8 @@ import argparse
 from omegaconf import DictConfig
 import os
 
+from test_functions import function_factory
+
 DESCRIPTION = "Hyperdimensional Bayesian Optimization in Lava"
 
 def get_config() -> DictConfig:
