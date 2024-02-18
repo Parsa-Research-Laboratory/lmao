@@ -1,6 +1,10 @@
 from typing import Callable
 
-def function_factor(function_name: str) -> Callable:
+VALID_FUNCTIONS = [
+    "branin"
+]
+
+def function_factory(function_name: str) -> Callable:
     """
     TODO Finish Documentation
     """
