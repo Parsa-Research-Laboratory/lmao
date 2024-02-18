@@ -9,6 +9,7 @@ if __name__ == "__main__":
             "matplotlib",
             "numpy",
             "omegaconf",
+            "scikit-optimize",
             "tqdm",
         ],
         author="Mavi, Derek, Shay",
