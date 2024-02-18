@@ -28,7 +28,7 @@ def get_config() -> DictConfig:
     return config
 
 
-def print_intro(config, delimiter="-", delimiter_width=60):
+def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
     """
     TODO Finish Documentation
     """
