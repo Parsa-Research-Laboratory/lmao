@@ -1,6 +1,7 @@
 from omegaconf import DictConfig
 from skopt.space import Space
 
+from .factory import optimizer_factory
 from .optimizers.processes import BaseOptimizerProcess
 from .test_functions.processes import BaseFunctionProcess
 
