@@ -1,10 +1,16 @@
 import argparse
 from omegaconf import DictConfig
 
-from hdbo.factory import function_factory, VALID_FUNCTIONS, VALID_SOLVERS
+from hdbo.factory import (
+    config_factory,
+    function_factory,
+    VALID_FUNCTIONS,
+    VALID_SOLVERS
+)
 from hdbo.solver import BOSolver
 
 DESCRIPTION = "Hyperdimensional Bayesian Optimization in Lava"
+
 
 def get_config() -> DictConfig:
     """
@@ -87,6 +93,7 @@ def main(config: DictConfig):
     """
     print_intro(config)
 
+    config.optimizer = config_factory(config)
     function_process, search_space, minima = function_factory(config.function)
     solver = BOSolver(config)
     solver.solve(function_process, search_space, minima)
