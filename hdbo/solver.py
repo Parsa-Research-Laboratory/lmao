@@ -1,6 +1,7 @@
 from omegaconf import DictConfig
 from skopt.space import Space
 
+from .optimizers.processes import BaseOptimizerProcess
 from .test_functions.processes import BaseFunctionProcess
 
 
@@ -29,21 +30,62 @@ def validate_config(config: DictConfig) -> None:
 
 class BOSolver:
     """
-    TODO Finish Documentation
+    The BOSolver class represents a solver for optimization problems using
+    different forms of Bayesian Optimization in Lava.
+
+    Args:
+        config (DictConfig): The configuration for the Solver.
+
+    Attributes:
+        max_iter (int): The maximum number of iterations for the solver.
+        num_repeats (int): The number of times to repeat the optimization process.
+        optimizer_class (str): The class name of the optimizer to use.
+        optimizer_config (DictConfig): The configuration for the optimizer.
+
+    Methods:
+        solve(function: BaseFunctionProcess, search_space: Space, minima: float) -> None:
+            Solves the optimization problem using the specified function, search space, and minimum value.
+
+    TODOs:
+        - Ensure the problem process and the optimizer process have the same
+            input and output structure.
+        - Connect the processes.
+        - Run the optimizer.
+        - Print the results.
     """
     def __init__(self, config: DictConfig) -> None:
         """
-        TODO Finish Documentation
+        Initialize the Solver object.
+
+        Args:
+            config (DictConfig): The configuration for the Solver.
+
+        Returns:
+            None
         """
         validate_config(config)
 
         self.max_iter: int = config.max_iter
         self.num_repeats: int = config.num_repeats
-        self.solver_class: str = config.solver_class
+        self.optimizer_class: str = config.optimizer_class
+        self.optimizer_config: DictConfig = config.optimizer
 
-    def solve(self, problem: BaseFunctionProcess, search_space: Space,
+    def solve(self, function: BaseFunctionProcess, search_space: Space,
               minima: float) -> None:
         """
         TODO Finish Documentation
         """
-        pass
+        self.optimizer: BaseOptimizerProcess = optimizer_factory(
+            class_name=self.optimizer_class,
+            optimizer_config=self.optimizer_config,
+            search_space=search_space
+        )
+
+        # TODO 1) Ensure the problem process and the optimizer process have the same
+        # input and output structure
+
+        # TODO 2) Connect the processes
+
+        # TODO 3) Run the optimizer
+
+        # TODO 4) Print the results
