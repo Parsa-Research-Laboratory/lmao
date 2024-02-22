@@ -1,10 +1,31 @@
+from skopt.space import Space
 from typing import Callable
 
 VALID_FUNCTIONS = [
     "ackley",
 ]
 
-from typing import Callable
+VALID_SOLVERS = [
+    "vsa-cpu",
+    "gp-cpu"
+]
+
+def validate_return(function_process, search_space, minima):
+    """
+    Validate the return of the function_factory function.
+
+    Args:
+        function_process (Callable): The function process to validate.
+        search_space (Space): The search space to validate.
+        minima (float): The minima to validate.
+
+    Raises:
+        AssertionError: If the function process is not a callable, if the
+            search space is not a Space object, or if the minima is not a float.
+    """
+    assert callable(function_process), "function_process must be a callable"
+    assert isinstance(search_space, Space)
+    assert isinstance(minima, float), "minima must be a float"
 
 def function_factory(function_name: str, return_lp: bool = True) -> Callable:
     """
