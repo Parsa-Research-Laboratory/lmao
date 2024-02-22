@@ -35,10 +35,10 @@ def get_config() -> DictConfig:
         help="The number of times to repeat the optimization at every iteration",
     )
     parser.add_argument(
-        "--solver_class",
+        "--optimizer_class",
         type=str,
         default="vsa-cpu",
-        help="The class of solver to use",
+        help="The class of optimizer to use",
         choices=VALID_SOLVERS
     )
 
@@ -69,7 +69,7 @@ def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
     print(f" - Black Box Function: {config.function}")
     print(f" - Max Iterations: {config.max_iter}")
     print(f" - Number of Repeats: {config.num_repeats}")
-    print(f" - Solver Class: {config.solver_class}")
+    print(f" - Optimizer Class: {config.optimizer_class}")
     print(delimiter * delimiter_width)
 
 
