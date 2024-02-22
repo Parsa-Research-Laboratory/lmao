@@ -77,7 +77,7 @@ class BOSolver:
         TODO Finish Documentation
         """
         self.optimizer: BaseOptimizerProcess = optimizer_factory(
-            class_name=self.optimizer_class,
+            optimizer_class=self.optimizer_class,
             optimizer_config=self.optimizer_config,
             search_space=search_space
         )
