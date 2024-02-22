@@ -1,3 +1,4 @@
+from omegaconf import DictConfig
 from skopt.space import Space
 from typing import Callable
 
@@ -55,3 +56,30 @@ def function_factory(function_name: str, return_lp: bool = True) -> Callable:
 
     else:
         raise ValueError(f"Function {function_name} not found")
+
+
+def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
+                      search_space: Space) -> Callable:
+    """
+    Factory function that creates and returns an optimizer based on the specified optimizer class.
+
+    Args:
+        optimizer_class (str): The class of the optimizer to create. Valid values are "vsa-cpu" and "gp-cpu".
+        optimizer_config (DictConfig): The configuration for the optimizer.
+        search_space (Space): The search space for the optimizer.
+
+    Returns:
+        Callable: The created optimizer.
+
+    Raises:
+        ValueError: If the specified optimizer class is not found.
+    """
+
+    if optimizer_class == "vsa-cpu":
+        from hdbo.optimizers.processes import VSAOptimizerProcess
+        return VSAOptimizerProcess(optimizer_config, search_space)
+    elif optimizer_class == "gp-cpu":
+        from hdbo.optimizers.processes import GPOptimizerProcess
+        return GPOptimizerProcess(optimizer_config, search_space)
+    else:
+        raise ValueError(f"Optimizer {optimizer_class} not found")
