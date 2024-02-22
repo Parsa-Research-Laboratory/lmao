@@ -64,7 +64,8 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
     Factory function that creates and returns an optimizer based on the specified optimizer class.
 
     Args:
-        optimizer_class (str): The class of the optimizer to create. Valid values are "vsa-cpu" and "gp-cpu".
+        optimizer_class (str): The class of the optimizer to create.
+            Valid values are "vsa-cpu" and "gp-cpu".
         optimizer_config (DictConfig): The configuration for the optimizer.
         search_space (Space): The search space for the optimizer.
 
@@ -83,3 +84,30 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
         return GPOptimizerProcess(optimizer_config, search_space)
     else:
         raise ValueError(f"Optimizer {optimizer_class} not found")
+
+
+def config_factory(config: DictConfig) -> DictConfig:
+    """
+    Factory function for creating a configuration based on the given input.
+
+    Args:
+        config (DictConfig): The input configuration.
+
+    Returns:
+        DictConfig: The created configuration.
+
+    Raises:
+        ValueError: If the optimizer class is invalid.
+    """
+
+    assert isinstance(config, DictConfig), "config must be a DictConfig"
+    assert "optimizer_class" in config, "optimizer_class must be in config"
+
+    if config.optimizer_class == "vsa-cpu":
+        from .optimizers.base_configs import BASE_VSA_OPTIMIZER_CONFIG
+        config.optimizer = BASE_VSA_OPTIMIZER_CONFIG
+    elif config.optimizer_class == "gp-cpu":
+        from .optimizers.base_configs import BASE_GP_OPTIMIZER_CONFIG
+        config.optimizer = BASE_GP_OPTIMIZER_CONFIG
+    else:
+        raise ValueError(f"Invalid optimizer class: {config.optimizer_class}")
