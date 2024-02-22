@@ -1,8 +1,6 @@
 import argparse
 from omegaconf import DictConfig
-from skopt.space import Space
 
-from hdbo.test_functions.processes import BaseFunctionProcess
 from hdbo.factory import function_factory, VALID_FUNCTIONS, VALID_SOLVERS
 from hdbo.solver import BOSolver
 
@@ -10,7 +8,10 @@ DESCRIPTION = "Hyperdimensional Bayesian Optimization in Lava"
 
 def get_config() -> DictConfig:
     """
-    TODO Finish Documentation
+    Get the configuration for the optimization process.
+
+    Returns:
+        DictConfig: The configuration as a `DictConfig` object.
     """
     parser = argparse.ArgumentParser(description=DESCRIPTION)
 
@@ -74,7 +75,15 @@ def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
 
 def main(config: DictConfig):
     """
-    TODO Finish Documentation
+    Executes the main logic of the program.
+
+    Args:
+        config (DictConfig): The configuration object containing program
+            settings.
+            TODO Add Parameters
+
+    Returns:
+        None
     """
     print_intro(config)
 
