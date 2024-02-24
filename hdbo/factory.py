@@ -49,7 +49,7 @@ def function_factory(function_name: str, return_lp: bool = True) -> Callable:
 
         if return_lp:
             from hdbo.test_functions.processes import AckleyProcess
-            return AckleyProcess, SEARCH_SPACE, MINIMA
+            return AckleyProcess(), SEARCH_SPACE, MINIMA
         else:
             from hdbo.test_functions.py import ackley_function
             return ackley_function, SEARCH_SPACE, MINIMA
@@ -111,3 +111,5 @@ def config_factory(config: DictConfig) -> DictConfig:
         config.optimizer = BASE_GP_OPTIMIZER_CONFIG
     else:
         raise ValueError(f"Invalid optimizer class: {config.optimizer_class}")
+    
+    return config
