@@ -1,9 +1,11 @@
+from lava.magma.core.run_configs import Loihi2SimCfg
+from lava.magma.core.run_conditions import RunContinuous
 from omegaconf import DictConfig
 from skopt.space import Space
 
 from .factory import optimizer_factory
-from .optimizers.processes import BaseOptimizerProcess
-from .test_functions.processes import BaseFunctionProcess
+from .optimizers.base.process import BaseOptimizerProcess
+from .test_functions.base.process import BaseFunctionProcess
 
 
 def validate_config(config: DictConfig) -> None:
@@ -27,7 +29,6 @@ def validate_config(config: DictConfig) -> None:
     assert "num_repeats" in config, "num_repeats must be in config"
     assert isinstance(config.num_repeats, int), "num_repeats must be an integer"
     assert config.num_repeats > 0, "num_repeats must be greater than 0"
-
 
 class BOSolver:
     """
@@ -88,14 +89,12 @@ class BOSolver:
             search_space=search_space
         )
 
-        # TODO 1) Ensure the problem process and the optimizer process have the same
-        # input and output structure
-
         # Connect the output of the optimizer to the input of 
         # the function process and vice versa.
         self.optimizer.output_port.connect(function.input_port)
         function.output_port.connect(self.optimizer.input_port)
 
-        # TODO 3) Run the optimizer
+        # Run the optimizer
+        self.optimizer.run(RunContinuous(), Loihi2SimCfg()) 
 
         # TODO 4) Print the results

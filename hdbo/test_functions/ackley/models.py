@@ -6,7 +6,7 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 import numpy as np
 
-from ..processes.ackley_process import AckleyProcess
+from .process import AckleyProcess
 
 
 @implements(proc=AckleyProcess, protocol=LoihiProtocol)
@@ -20,5 +20,8 @@ class PyAckleyProcessModel(PyLoihiProcessModel):
     num_outputs = LavaPyType(int, int)
     num_repeats = LavaPyType(int, int)
 
-    def run_async(self):
+    def run_spk(self):
+        """
+        TODO Finish Documentation
+        """
         print("Running Ackley P1")

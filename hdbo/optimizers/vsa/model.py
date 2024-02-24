@@ -6,13 +6,12 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.sync.protocols.async_protocol import AsyncProtocol
 import numpy as np
 
-from ..processes.vsa_process import VSAOptimizerProcess
-
+from .process import VSAOptimizerProcess
 
 @implements(proc=VSAOptimizerProcess, protocol=AsyncProtocol)
 @requires(CPU)
 @tag('floating_pt')
-class PyAsyncVSAOptimizerModel(PyAsyncProcessModel):
+class PyAsyncVSAOptimizerProcessModel(PyAsyncProcessModel):
     input_port: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.float32)
     output_port: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.float32)
 
