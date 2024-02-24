@@ -1,3 +1,6 @@
+from omegaconf import DictConfig
+from skopt.space import Space
+
 from .base_optimizer import BaseOptimizerProcess
 
 class VSAOptimizerProcess(BaseOptimizerProcess):
@@ -7,22 +10,26 @@ class VSAOptimizerProcess(BaseOptimizerProcess):
     This class provides an implementation for the VSA optimizer process.
 
     Attributes:
-        num_params (int): The number of parameters.
-        num_repeats (int): The number of repeats.
-        num_outputs (int): The number of outputs.
-        input (InPort): The input port.
-        output (OutPort): The output port.
+        TODO Finish Documentation
     """
 
-    def __init__(self, num_params: int, num_repeats: int = 1,
-                 num_outputs: int = 1, **kwargs):
+    def __init__(self, config: DictConfig, search_space: Space, **kwargs):
         """
         Initialize a VSAOptimizerProcess object.
 
         Args:
-            num_params (int): The number of parameters.
-            num_repeats (int, optional): The number of repeats. Defaults to 1.
-            num_outputs (int, optional): The number of outputs. Defaults to 1.
-            **kwargs: Additional keyword arguments.
+            TODO Finish Documentation
         """
-        super().__init__(num_params, num_repeats, num_outputs, **kwargs)
+
+        assert isinstance(config, DictConfig), "config must be a DictConfig"
+        assert isinstance(search_space, Space), "search_space must be a Space"
+
+        super().__init__(
+            num_params=search_space.n_dims,
+            num_repeats=config.get("num_repeats", 1),
+            num_outputs=config.get("num_outputs", 1),
+            **kwargs
+        )
+
+        self.config: DictConfig = config
+        self.search_space: Space = search_space
