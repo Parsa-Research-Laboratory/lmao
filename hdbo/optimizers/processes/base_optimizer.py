@@ -45,5 +45,5 @@ class BaseOptimizerProcess(AbstractProcess):
         self.num_params: int = num_params
         self.num_outputs: int = num_outputs
 
-        self.input = InPort(shape=(num_repeats, num_params,))
-        self.output = OutPort(shape=(num_repeats, num_params + num_outputs,))
+        self.input_port = InPort(shape=(num_repeats, num_params + num_outputs,))
+        self.output_port = OutPort(shape=(num_repeats, num_params,))
