@@ -71,11 +71,17 @@ class BOSolver:
         self.optimizer_class: str = config.optimizer_class
         self.optimizer_config: DictConfig = config.optimizer
 
+        # Update the optimizer configuration based on the specific
+        # configuration for the Solver
+        self.optimizer_config.num_repeats = self.num_repeats
+        self.optimizer_config.num_outputs = 1
+
     def solve(self, function: BaseFunctionProcess, search_space: Space,
               minima: float) -> None:
         """
         TODO Finish Documentation
         """
+
         self.optimizer: BaseOptimizerProcess = optimizer_factory(
             optimizer_class=self.optimizer_class,
             optimizer_config=self.optimizer_config,
@@ -85,7 +91,10 @@ class BOSolver:
         # TODO 1) Ensure the problem process and the optimizer process have the same
         # input and output structure
 
-        # TODO 2) Connect the processes
+        # Connect the output of the optimizer to the input of 
+        # the function process and vice versa.
+        self.optimizer.output_port.connect(function.input_port)
+        function.output_port.connect(self.optimizer.input_port)
 
         # TODO 3) Run the optimizer
 
