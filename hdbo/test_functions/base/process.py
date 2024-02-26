@@ -48,3 +48,21 @@ class BaseFunctionProcess(AbstractProcess):
 
         self.input_port = InPort(shape=(num_repeats, num_params,))
         self.output_port = OutPort(shape=(num_repeats, num_params + num_outputs,))
+
+
+from lava.magma.core.process.process import AbstractProcess
+from lava.magma.core.process.ports.ports import InPort, OutPort
+from lava.magma.core.process.variable import Var
+
+
+class AckleyFunctionProcess(AbstractProcess):
+    def __init__(self, num_params: int = 2, num_repeats: int = 1,
+                num_outputs: int = 1, **kwargs):
+        super().__init__(**kwargs)
+
+        self.num_params = Var(shape=(1,), init=num_params)
+        self.num_outputs = Var(shape=(1,), init=num_outputs)
+        self.num_repeats = Var(shape=(1,), init=num_repeats)
+
+        self.input_port = InPort(shape=(num_repeats, num_params,))
+        self.output_port = OutPort(shape=(num_repeats, num_params + num_outputs,))

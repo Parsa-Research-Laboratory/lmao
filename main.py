@@ -43,7 +43,7 @@ def get_config() -> DictConfig:
     parser.add_argument(
         "--optimizer_class",
         type=str,
-        default="vsa-cpu",
+        default="gp-cpu",
         help="The class of optimizer to use",
         choices=VALID_SOLVERS
     )

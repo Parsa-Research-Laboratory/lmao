@@ -80,7 +80,7 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
         from hdbo.optimizers.vsa.process import VSAOptimizerProcess
         return VSAOptimizerProcess(optimizer_config, search_space)
     elif optimizer_class == "gp-cpu":
-        from hdbo.optimizers.gpr import GPROptimizerProcess
+        from hdbo.optimizers.gpr.process import GPROptimizerProcess
         return GPROptimizerProcess(optimizer_config, search_space)
     else:
         raise ValueError(f"Optimizer {optimizer_class} not found")

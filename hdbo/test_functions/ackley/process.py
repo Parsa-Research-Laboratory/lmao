@@ -4,10 +4,12 @@ from lava.magma.core.decorator import implements, requires, tag
 from lava.magma.core.resources import CPU
 from lava.magma.core.model.py.type import LavaPyType
 from lava.magma.core.model.py.ports import PyInPort, PyOutPort
+from lava.magma.core.process.variable import Var
 from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
+
 import numpy as np
 
-from ..base.process import BaseFunctionProcess
+from hdbo.test_functions.base.process import BaseFunctionProcess
 
 
 class AckleyProcess(BaseFunctionProcess):
@@ -36,6 +38,10 @@ class AckleyProcess(BaseFunctionProcess):
         """
         super().__init__(num_params=2, **kwargs)
 
+        self.a: float = Var(shape=(1,), init=20)
+        self.b: float = Var(shape=(1,), init=0.2)
+        self.c: float = Var(shape=(1,), init=2 * np.pi)
+
 
 @implements(proc=AckleyProcess, protocol=LoihiProtocol)
 @requires(CPU)
@@ -48,8 +54,32 @@ class PyAckleyProcessModel(PyLoihiProcessModel):
     num_outputs = LavaPyType(int, int)
     num_repeats = LavaPyType(int, int)
 
+    a = LavaPyType(float, float)
+    b = LavaPyType(float, float)
+    c = LavaPyType(float, float)
+
     def run_spk(self):
         """
-        TODO Finish Documentation
+        For more information about the Ackley function, see:
+        - ./ackley.py 
+        - https://en.wikipedia.org/wiki/Ackley_function
         """
-        print("Running Ackley P1")
+        if self.input_port.probe():
+            input_data = self.input_port.recv()
+
+            output_packet = np.zeros((self.num_repeats, self.num_outputs + self.num_params))
+            output_packet[:, :self.num_params] = input_data
+
+            for repeat in range(self.num_repeats):
+                x0 = input_data[repeat, 0]
+                x1 = input_data[repeat, 1]
+
+                y = -self.a * np.exp(-self.b * np.sqrt(0.5 * (x0**2 + x1**2))) \
+                    - np.exp(0.5 * (np.cos(self.c * x0) + np.cos(self.c * x1))) \
+                    + self.a + np.exp(1)
+
+                output_packet[repeat, self.num_params:] = y
+
+            self.output_port.send(output_packet)
+        else:
+            pass

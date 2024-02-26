@@ -2,6 +2,7 @@ from lava.magma.core.run_configs import Loihi2SimCfg
 from lava.magma.core.run_conditions import RunContinuous
 from omegaconf import DictConfig
 from skopt.space import Space
+import time
 
 from .factory import optimizer_factory
 from .optimizers.base.process import BaseOptimizerProcess
@@ -94,7 +95,16 @@ class BOSolver:
         self.optimizer.output_port.connect(function.input_port)
         function.output_port.connect(self.optimizer.input_port)
 
-        # Run the optimizer
-        self.optimizer.run(RunContinuous(), Loihi2SimCfg()) 
+        finished: bool = False
 
-        # TODO 4) Print the results
+        while not finished:
+            self.optimizer.run(RunContinuous(), Loihi2SimCfg()) 
+
+            time.sleep(1)
+
+            self.optimizer.pause()
+
+            if self.optimizer.finished.get():
+                finished = True
+
+        self.optimizer.stop()
