@@ -139,6 +139,14 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     time_log = LavaPyType(np.ndarray, np.float32)
 
     def run_async(self):
+        """
+        Run the optimization process asynchronously.
+
+        This method continuously runs the optimization process until a pause or
+        stop command is received. It sends an initial point to prime the system
+        and then iteratively receives new data, updates the optimizer, and
+        sends new points to evaluate.
+        """
         while True:
             if self.check_for_pause_cmd():
                 return
@@ -181,8 +189,6 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     y = [val[0] for val in y]
 
                     self.optimizer.tell(x, y)
-
-                    print(f"Best Point (Iteration {self.time_step}): {np.min(self.optimizer.get_result().func_vals)}")
 
                     output_data: list = self.optimizer.ask(
                         n_points=self.num_repeats,
