@@ -16,12 +16,33 @@ from hdbo.optimizers.base.process import BaseOptimizerProcess
 
 class GPROptimizerProcess(BaseOptimizerProcess):
     """
-    Represents a process for the tradition GPR optimizer.
+    A class representing the process of optimizing using Gaussian Process
+    Regression (GPR) for optimizing black-box functions.
 
-    This class provides an implementation for the traditional optimizer process.
+    This class extends the BaseOptimizerProcess class and provides additional
+    functionality specific to GPR optimization.
 
     Attributes:
-        TODO Finish Documentation
+        max_iterations (Var): The maximum number of iterations for the
+            optimization process.
+        num_initial_points (Var): The number of initial points to sample for
+            the optimization process.
+        seed (Var): The seed value for random number generation.
+        finished (Var): A variable indicating whether the optimization process
+            has finished.
+        time_step (Var): The current time step of the optimization process.
+        x_log (Var): A log of the input values used during the optimization
+            process.
+        y_log (Var): A log of the output values obtained during the
+            optimization process.
+        time_log (Var): A log of the time steps during the optimization
+            process.
+
+    Args:
+        config (DictConfig): The configuration for the optimization process.
+        search_space (Space): The search space for the optimization process.
+        **kwargs: Additional keyword arguments to be passed to the
+            BaseOptimizerProcess constructor.
     """
 
     def __init__(self, config: DictConfig, search_space: Space, **kwargs):
@@ -29,7 +50,10 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         Initialize a GPROptimizerProcess object.
 
         Args:
-            TODO Finish Documentation
+            config (DictConfig): The configuration for the optimization process.
+            search_space (Space): The search space for the optimization process.
+            **kwargs: Additional keyword arguments to be passed to the
+                BaseOptimizerProcess constructor.
         """
 
         assert isinstance(config, DictConfig), "config must be a DictConfig"
@@ -45,8 +69,14 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         # ------------------------
         # Configuration Parameters
         # ------------------------
-        self.max_iterations = Var(shape=(1,), init=config.get("max_iterations", 20))
-        self.num_initial_points = Var(shape=(1,), init=config.get("num_initial_points", 5))
+        self.max_iterations = Var(
+            shape=(1,),
+            init=config.get("max_iterations", 20)
+        )
+        self.num_initial_points = Var(
+            shape=(1,),
+            init=config.get("num_initial_points", 5)
+        )
         self.seed = Var(shape=(1,), init=config.get("seed", 0))
 
         # ------------------------
@@ -89,19 +119,22 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     """
     A class representing a PyAsyncGPROptimizerModel.
 
-    This class is responsible for optimizing a function using Gaussian Process Regression (GPR).
-    It inherits from the PyAsyncProcessModel class.
+    This class is responsible for optimizing a function using Gaussian Process
+    Regression (GPR). It inherits from the PyAsyncProcessModel class.
 
     Attributes:
         input_port (PyInPort): The input port for receiving data.
         output_port (PyOutPort): The output port for sending data.
         num_params (int): The number of parameters in the optimization problem.
         num_outputs (int): The number of outputs in the optimization problem.
-        num_repeats (int): The number of times to repeat the optimization process.
-        max_iterations (int): The maximum number of iterations for the optimization process.
+        num_repeats (int): The number of times to repeat the optimization
+            process.
+        max_iterations (int): The maximum number of iterations for the
+            optimization process.
         num_initial_points (int): The number of initial points to sample.
         seed (int): The seed for random number generation.
-        finished (int): Flag indicating whether the optimization process has finished.
+        finished (int): Flag indicating whether the optimization process has
+            finished.
         time_step (int): The current time step of the optimization process.
         x_log (np.ndarray): Log of input data.
         y_log (np.ndarray): Log of output data.
