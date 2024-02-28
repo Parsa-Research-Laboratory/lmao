@@ -27,6 +27,9 @@ class AckleyProcess(BaseFunctionProcess):
         num_outputs (int): The number of output parameters for the function.
         input (InPort): The input port for the function.
         output (OutPort): The output port for the function.
+        a (float): The 'a' parameter for the Ackley function.
+        b (float): The 'b' parameter for the Ackley function.
+        c (float): The 'c' parameter for the Ackley function.
     """
 
     def __init__(self, **kwargs):
@@ -47,6 +50,22 @@ class AckleyProcess(BaseFunctionProcess):
 @requires(CPU)
 @tag('floating_pt')
 class PyAckleyProcessModel(PyLoihiProcessModel):
+    """
+    This class represents a PyAckleyProcessModel, which is a subclass of
+    PyLoihiProcessModel. It implements the Ackley function and provides a
+    method to run the spiking neural network simulation.
+
+    Attributes:
+        input_port (PyInPort): The input port for receiving input data.
+        output_port (PyOutPort): The output port for sending output data.
+        num_params (int): The number of parameters.
+        num_outputs (int): The number of outputs.
+        num_repeats (int): The number of repeats.
+        a (float): The value of parameter 'a'.
+        b (float): The value of parameter 'b'.
+        c (float): The value of parameter 'c'.
+    """
+
     input_port: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.float32)
     output_port: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.float32)
 
