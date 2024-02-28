@@ -27,6 +27,10 @@ def validate_config(config: DictConfig) -> None:
     assert isinstance(config.max_iter, int), "max_iter must be an integer"
     assert config.max_iter > 0, "max_iter must be greater than 0"
 
+    assert "num_initial_points" in config, "num_initial_points must be in config"
+    assert isinstance(config.num_initial_points, int), "num_initial_points must be an integer"
+    assert config.num_initial_points > 0, "num_initial_points must be greater than 0"
+
     assert "num_repeats" in config, "num_repeats must be in config"
     assert isinstance(config.num_repeats, int), "num_repeats must be an integer"
     assert config.num_repeats > 0, "num_repeats must be greater than 0"
@@ -69,6 +73,7 @@ class BOSolver:
         validate_config(config)
 
         self.max_iter: int = config.max_iter
+        self.num_initial_points: int = config.num_initial_points
         self.num_repeats: int = config.num_repeats
         self.optimizer_class: str = config.optimizer_class
         self.optimizer_config: DictConfig = config.optimizer

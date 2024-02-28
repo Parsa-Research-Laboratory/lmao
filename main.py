@@ -31,8 +31,14 @@ def get_config() -> DictConfig:
     parser.add_argument(
         "--max-iter",
         type=int,
-        default=100,
+        default=50,
         help="The maximum number of iterations to run",
+    )
+    parser.add_argument(
+        "--num_initial_points",
+        type=int,
+        default=10,
+        help="The number of initial points to use for optimizer initialization",
     )
     parser.add_argument(
         "--num_repeats",
@@ -74,6 +80,7 @@ def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
     print(f"Configuration:")
     print(f" - Black Box Function: {config.function}")
     print(f" - Max Iterations: {config.max_iter}")
+    print(f" - Number of Initial Points: {config.num_initial_points}")
     print(f" - Number of Repeats: {config.num_repeats}")
     print(f" - Optimizer Class: {config.optimizer_class}")
     print(delimiter * delimiter_width)
