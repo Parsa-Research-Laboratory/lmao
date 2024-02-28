@@ -86,6 +86,28 @@ class GPROptimizerProcess(BaseOptimizerProcess):
 @requires(CPU)
 @tag('floating_pt')
 class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
+    """
+    A class representing a PyAsyncGPROptimizerModel.
+
+    This class is responsible for optimizing a function using Gaussian Process Regression (GPR).
+    It inherits from the PyAsyncProcessModel class.
+
+    Attributes:
+        input_port (PyInPort): The input port for receiving data.
+        output_port (PyOutPort): The output port for sending data.
+        num_params (int): The number of parameters in the optimization problem.
+        num_outputs (int): The number of outputs in the optimization problem.
+        num_repeats (int): The number of times to repeat the optimization process.
+        max_iterations (int): The maximum number of iterations for the optimization process.
+        num_initial_points (int): The number of initial points to sample.
+        seed (int): The seed for random number generation.
+        finished (int): Flag indicating whether the optimization process has finished.
+        time_step (int): The current time step of the optimization process.
+        x_log (np.ndarray): Log of input data.
+        y_log (np.ndarray): Log of output data.
+        time_log (np.ndarray): Log of time taken for each iteration.
+    """
+
     input_port: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.float32)
     output_port: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.float32)
 
