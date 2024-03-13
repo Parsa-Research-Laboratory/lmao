@@ -98,7 +98,7 @@ class PyAckleyProcessModel(PyLoihiProcessModel):
                     + self.a + np.exp(1)
 
                 output_packet[repeat, self.num_params:] = y
-
+            
             self.output_port.send(output_packet)
         else:
             pass

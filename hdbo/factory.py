@@ -49,7 +49,7 @@ def function_factory(function_name: str, return_lp: bool = True) -> Callable:
 
         if return_lp:
             from hdbo.test_functions.ackley.process import AckleyProcess
-            return AckleyProcess(), SEARCH_SPACE, MINIMA
+            return AckleyProcess, SEARCH_SPACE, MINIMA
         else:
             from hdbo.test_functions.ackley.ackley import ackley_function
             return ackley_function, SEARCH_SPACE, MINIMA
@@ -77,10 +77,10 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
     """
 
     if optimizer_class == "vsa-cpu":
-        from hdbo.optimizers.vsa.process import VSAOptimizerProcess
+        from hdbo.optimizers.vsa import VSAOptimizerProcess
         return VSAOptimizerProcess(optimizer_config, search_space)
     elif optimizer_class == "gp-cpu":
-        from hdbo.optimizers.gpr.process import GPROptimizerProcess
+        from hdbo.optimizers.gpr import GPROptimizerProcess
         return GPROptimizerProcess(optimizer_config, search_space)
     else:
         raise ValueError(f"Optimizer {optimizer_class} not found")
@@ -104,11 +104,11 @@ def config_factory(config: DictConfig) -> DictConfig:
     assert "optimizer_class" in config, "optimizer_class must be in config"
 
     if config.optimizer_class == "vsa-cpu":
-        from .optimizers.base_configs import BASE_VSA_OPTIMIZER_CONFIG
-        config.optimizer = BASE_VSA_OPTIMIZER_CONFIG
+        from .optimizers.configs import VSA_BASE_CONFIG
+        config.optimizer = VSA_BASE_CONFIG
     elif config.optimizer_class == "gp-cpu":
-        from .optimizers.base_configs import BASE_GP_OPTIMIZER_CONFIG
-        config.optimizer = BASE_GP_OPTIMIZER_CONFIG
+        from .optimizers.configs import GPR_BASE_CONFIG
+        config.optimizer = GPR_BASE_CONFIG
     else:
         raise ValueError(f"Invalid optimizer class: {config.optimizer_class}")
     

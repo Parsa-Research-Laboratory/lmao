@@ -1,11 +1,13 @@
 from lava.magma.core.run_configs import Loihi2SimCfg
 from lava.magma.core.run_conditions import RunContinuous
+
+import os
 from omegaconf import DictConfig
 from skopt.space import Space
 import time
 
 from .factory import optimizer_factory
-from .optimizers.base.process import BaseOptimizerProcess
+from .optimizers.base import BaseOptimizerProcess
 from .test_functions.base.process import BaseFunctionProcess
 
 
@@ -83,6 +85,13 @@ class BOSolver:
         self.optimizer_config.num_repeats = self.num_repeats
         self.optimizer_config.num_outputs = 1
 
+        # ----------------------------------------------------------
+        # Variables for ProcessModel Compilation
+        #
+        # Set the environment variable for the number of processes
+        # ----------------------------------------------------------
+        os.environ["LAVA_BO_NUM_PROCESSES"] = str(self.optimizer_config.num_processes)
+
     def solve(self, function: BaseFunctionProcess, search_space: Space,
               minima: float) -> None:
         """
@@ -95,10 +104,20 @@ class BOSolver:
             search_space=search_space
         )
 
-        # Connect the output of the optimizer to the input of 
-        # the function process and vice versa.
-        self.optimizer.output_port.connect(function.input_port)
-        function.output_port.connect(self.optimizer.input_port)
+        # -------------------------------------------------------
+        # For each unique process, connect the unique input and
+        # output ports of the optimizer process to the input and
+        # output ports of the process
+        # -------------------------------------------------------
+        num_processes: int = self.optimizer.num_processes.get()
+        unique_processes = [function() for _ in range(num_processes)]
+        for i in range(num_processes):
+            optimizer_input_port = eval(f"self.optimizer.input_port_{i}")
+            optimizer_output_port = eval(f"self.optimizer.output_port_{i}")
+            process = unique_processes[i]
+
+            optimizer_output_port.connect(process.input_port)
+            process.output_port.connect(optimizer_input_port)
 
         finished: bool = False
 

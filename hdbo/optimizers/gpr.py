@@ -5,13 +5,15 @@ from lava.magma.core.model.py.type import LavaPyType
 from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.process.variable import Var
 from lava.magma.core.sync.protocols.async_protocol import AsyncProtocol
+
 import numpy as np
 from omegaconf import DictConfig
+import os
 from skopt import Optimizer
 from skopt.space import Space
 import time
 
-from hdbo.optimizers.base.process import BaseOptimizerProcess
+from hdbo.optimizers.base import BaseOptimizerProcess
 
 
 class GPROptimizerProcess(BaseOptimizerProcess):
@@ -59,12 +61,11 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         assert isinstance(config, DictConfig), "config must be a DictConfig"
         assert isinstance(search_space, Space), "search_space must be a Space"
 
-        super().__init__(
-            num_params=search_space.n_dims,
-            num_repeats=config.get("num_repeats", 1),
-            num_outputs=config.get("num_outputs", 1),
-            **kwargs
-        )
+        super().__init__(num_params=search_space.n_dims,
+                         num_processes=config.get("num_processes", 1),
+                         num_repeats=config.get("num_repeats", 1),
+                         num_outputs=config.get("num_outputs", 1),
+                         **kwargs)
 
         # ------------------------
         # Configuration Parameters
@@ -83,6 +84,7 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         # Internal State Variables
         # ------------------------
         self.finished = Var(shape=(1,), init=0)
+        self.process_ticker = Var(shape=(1,), init=0)
         self.time_step = Var(shape=(1,), init=0)
 
         # ------------------------
@@ -141,13 +143,21 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
         time_log (np.ndarray): Log of time taken for each iteration.
     """
 
-    input_port: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.float32)
-    output_port: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.float32)
+    # ----------------------------------
+    # Initialize input and output ports
+    # for each unique process
+    # ----------------------------------
+    num_processes: str = os.environ["LAVA_BO_NUM_PROCESSES"]
+    num_processes: int = int(num_processes)
+    for i in range(num_processes):
+        exec(f"input_port_{i} = LavaPyType(PyInPort.VEC_DENSE, np.float32)")
+        exec(f"output_port_{i} = LavaPyType(PyOutPort.VEC_DENSE, np.float32)")
 
     # ------------------------
     # Parent Class Parameters
     # ------------------------
     num_params = LavaPyType(int, int)
+    num_processes = LavaPyType(int, int)
     num_outputs = LavaPyType(int, int)
     num_repeats = LavaPyType(int, int)
 
@@ -162,6 +172,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     # Internal State Variables
     # ------------------------
     finished = LavaPyType(int, int)
+    process_ticker = LavaPyType(int, int)
     time_step = LavaPyType(int, int)
 
     # ------------------------
@@ -169,7 +180,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     # ------------------------
     x_log = LavaPyType(np.ndarray, np.float32)
     y_log = LavaPyType(np.ndarray, np.float32)
-    time_log = LavaPyType(np.ndarray, np.float32)
+    time_log = LavaPyType(np.ndarray, np.float32)        
 
     def run_async(self):
         """
@@ -205,14 +216,20 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     random_state=self.seed
                 )
 
-                output_data: list = self.optimizer.ask(n_points=self.num_repeats)
-                output_data: np.ndarray = np.array(output_data)
-                self.output_port.send(output_data)
+                # send an initial point to each of the 
+                for i in range(self.num_processes):
+                    output_port: PyOutPort = eval(f"self.output_port_{i}")
+                    output_data: list = self.optimizer.ask(n_points=self.num_repeats)
+                    output_data: np.ndarray = np.array(output_data)
+                    output_port.send(output_data)
 
             if self.time_step < self.max_iterations:
-                if self.input_port.probe():
+                input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
+                output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
+                self.process_ticker = (self.process_ticker + 1) % self.num_processes
+                if input_port.probe():
                     start_time: float = time.time()
-                    new_data: np.ndarray = self.input_port.recv()
+                    new_data: np.ndarray = input_port.recv()
 
                     self.x_log[self.time_step, :, :] = new_data[:, :self.num_params]
                     self.y_log[self.time_step, :, :] = new_data[:, self.num_params:]
@@ -228,7 +245,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                         strategy=self.asking_strategy
                     )
                     output_data: np.ndarray = np.array(output_data)
-                    self.output_port.send(output_data)
+                    output_port.send(output_data)
 
                     self.time_log[self.time_step] = time.time() - start_time
                     self.time_step += 1

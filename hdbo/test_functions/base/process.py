@@ -63,6 +63,5 @@ class AckleyFunctionProcess(AbstractProcess):
         self.num_params = Var(shape=(1,), init=num_params)
         self.num_outputs = Var(shape=(1,), init=num_outputs)
         self.num_repeats = Var(shape=(1,), init=num_repeats)
-
         self.input_port = InPort(shape=(num_repeats, num_params,))
         self.output_port = OutPort(shape=(num_repeats, num_params + num_outputs,))

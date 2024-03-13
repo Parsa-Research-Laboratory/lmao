@@ -8,7 +8,7 @@ import numpy as np
 from omegaconf import DictConfig
 from skopt.space import Space
 
-from ..base.process import BaseOptimizerProcess
+from .base import BaseOptimizerProcess
 
 class VSAOptimizerProcess(BaseOptimizerProcess):
     """
@@ -40,6 +40,7 @@ class VSAOptimizerProcess(BaseOptimizerProcess):
 
         self.config: DictConfig = config
         self.search_space: Space = search_space
+
 
 @implements(proc=VSAOptimizerProcess, protocol=AsyncProtocol)
 @requires(CPU)
