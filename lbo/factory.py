@@ -76,10 +76,7 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
         ValueError: If the specified optimizer class is not found.
     """
 
-    if optimizer_class == "vsa-cpu":
-        from lbo.optimizers.vsa import VSAOptimizerProcess
-        return VSAOptimizerProcess(optimizer_config, search_space)
-    elif optimizer_class == "gp-cpu":
+    if optimizer_class == "gp-cpu":
         from lbo.optimizers.gpr import GPROptimizerProcess
         return GPROptimizerProcess(optimizer_config, search_space)
     else:
@@ -103,10 +100,7 @@ def config_factory(config: DictConfig) -> DictConfig:
     assert isinstance(config, DictConfig), "config must be a DictConfig"
     assert "optimizer_class" in config, "optimizer_class must be in config"
 
-    if config.optimizer_class == "vsa-cpu":
-        from .optimizers.configs import VSA_BASE_CONFIG
-        config.optimizer = VSA_BASE_CONFIG
-    elif config.optimizer_class == "gp-cpu":
+    if config.optimizer_class == "gp-cpu":
         from .optimizers.configs import GPR_BASE_CONFIG
         config.optimizer = GPR_BASE_CONFIG
     else:

@@ -3,6 +3,7 @@ from lava.magma.core.decorator import implements, requires, tag
 from lava.magma.core.resources import CPU
 from lava.magma.core.model.py.type import LavaPyType
 from lava.magma.core.model.py.ports import PyInPort, PyOutPort
+from lava.magma.core.process.process import ProcessParameters
 from lava.magma.core.process.variable import Var
 from lava.magma.core.sync.protocols.async_protocol import AsyncProtocol
 
@@ -180,7 +181,13 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     # ------------------------
     x_log = LavaPyType(np.ndarray, np.float32)
     y_log = LavaPyType(np.ndarray, np.float32)
-    time_log = LavaPyType(np.ndarray, np.float32)        
+    time_log = LavaPyType(np.ndarray, np.float32)    
+
+    def __init__(self, proc_params: ProcessParameters, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        print(proc_params._parameters)
+        print(*args, **kwargs)    
 
     def run_async(self):
         """

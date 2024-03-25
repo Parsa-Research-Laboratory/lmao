@@ -5,9 +5,11 @@ import os
 from omegaconf import DictConfig
 from skopt.space import Space
 import time
+from typing import Union
 
 from .factory import optimizer_factory
 from .optimizers.base import BaseOptimizerProcess
+from .test_functions.abstract.process import AbstractFunctionProcess
 from .test_functions.base.process import BaseFunctionProcess
 
 
@@ -92,8 +94,8 @@ class BOSolver:
         # ----------------------------------------------------------
         os.environ["LAVA_BO_NUM_PROCESSES"] = str(self.optimizer_config.num_processes)
 
-    def solve(self, function: BaseFunctionProcess, search_space: Space,
-              minima: float) -> None:
+    def solve(self, function: Union[BaseFunctionProcess, callable], search_space: Space,
+              ) -> None:
         """
         TODO Finish Documentation
         """
@@ -104,13 +106,28 @@ class BOSolver:
             search_space=search_space
         )
 
+        if not isinstance(function, BaseFunctionProcess) and callable(function):
+            import inspect
+            sig = inspect.signature(function)
+            function_process = AbstractFunctionProcess(
+                config=self.optimizer_config,
+                function=function,
+                search_space=search_space
+            )
+            print(sig.parameters)
+            print("Function is callable")
+            # exit()
+        else:
+            function_process = function
+
+
         # -------------------------------------------------------
         # For each unique process, connect the unique input and
         # output ports of the optimizer process to the input and
         # output ports of the process
         # -------------------------------------------------------
         num_processes: int = self.optimizer.num_processes.get()
-        unique_processes = [function() for _ in range(num_processes)]
+        unique_processes = [function_process() for _ in range(num_processes)]
         for i in range(num_processes):
             optimizer_input_port = eval(f"self.optimizer.input_port_{i}")
             optimizer_output_port = eval(f"self.optimizer.output_port_{i}")

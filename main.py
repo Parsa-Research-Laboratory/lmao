@@ -80,6 +80,7 @@ def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
         delimiter_width (int, optional): The width of the separator line.
             Defaults to 60.
     """
+    print()
     print(delimiter * delimiter_width)
     print(DESCRIPTION)
     print(delimiter * delimiter_width)
@@ -108,9 +109,9 @@ def main(config: DictConfig):
     print_intro(config)
 
     config.optimizer = config_factory(config)
-    function_process, search_space, minima = function_factory(config.function)
+    function_process, search_space, minima = function_factory(config.function, return_lp=False)
     solver = BOSolver(config)
-    solver.solve(function_process, search_space, minima)
+    solver.solve(function_process, search_space)
 
 
 if __name__ == "__main__":
