@@ -31,12 +31,15 @@ def validate_config(config: DictConfig) -> None:
     assert isinstance(config.max_iter, int), "max_iter must be an integer"
     assert config.max_iter > 0, "max_iter must be greater than 0"
 
-    assert "num_initial_points" in config, "num_initial_points must be in config"
-    assert isinstance(config.num_initial_points, int), "num_initial_points must be an integer"
-    assert config.num_initial_points > 0, "num_initial_points must be greater than 0"
+    assert "num_initial_points" in config, \
+        "num_initial_points must be in config"
+    assert isinstance(config.num_initial_points, int), \
+        "num_initial_points must be an integer"
+    assert config.num_initial_points > 0, \
+        "num_initial_points must be greater than 0"
 
     assert "num_repeats" in config, "num_repeats must be in config"
-    assert isinstance(config.num_repeats, int), "num_repeats must be an integer"
+    assert isinstance(config.num_repeats, int), "num_repeats must be an int"
     assert config.num_repeats > 0, "num_repeats must be greater than 0"
 
 class BOSolver:
@@ -49,13 +52,15 @@ class BOSolver:
 
     Attributes:
         max_iter (int): The maximum number of iterations for the solver.
-        num_repeats (int): The number of times to repeat the optimization process.
+        num_repeats (int): The number of times to repeat the optimizatiom.
         optimizer_class (str): The class name of the optimizer to use.
         optimizer_config (DictConfig): The configuration for the optimizer.
 
     Methods:
-        solve(function: BaseFunctionProcess, search_space: Space, minima: float) -> None:
-            Solves the optimization problem using the specified function, search space, and minimum value.
+        solve(function: BaseFunctionProcess, search_space: Space,
+                minima: float) -> None:
+            Solves the optimization problem using the specified function,
+            search space, and minimum value.
 
     TODOs:
         - Ensure the problem process and the optimizer process have the same
@@ -92,10 +97,11 @@ class BOSolver:
         #
         # Set the environment variable for the number of processes
         # ----------------------------------------------------------
-        os.environ["LAVA_BO_NUM_PROCESSES"] = str(self.optimizer_config.num_processes)
+        os.environ["LAVA_BO_NUM_PROCESSES"] = \
+            str(self.optimizer_config.num_processes)
 
-    def solve(self, function: Union[BaseFunctionProcess, callable], search_space: Space,
-              ) -> None:
+    def solve(self, function: Union[BaseFunctionProcess, callable],
+              search_space: Space) -> None:
         """
         TODO Finish Documentation
         """
