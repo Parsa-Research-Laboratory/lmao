@@ -1,1 +1,1 @@
-# Hyperdimensional Bayesian Optimization in Lava
+# Bayesian Optimization in Lava
