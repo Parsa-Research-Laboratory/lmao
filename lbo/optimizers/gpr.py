@@ -64,7 +64,6 @@ class GPROptimizerProcess(BaseOptimizerProcess):
 
         super().__init__(num_params=search_space.n_dims,
                          num_processes=config.get("num_processes", 1),
-                         num_repeats=config.get("num_repeats", 1),
                          num_outputs=config.get("num_outputs", 1),
                          **kwargs)
 
@@ -93,7 +92,6 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         # ------------------------
         x_log_shape: tuple = (
             self.max_iterations.get(),
-            self.num_repeats.get(),
             self.num_params.get()
         )
         self.x_log = Var(
@@ -102,7 +100,6 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         )
         y_log_shape: tuple = (
             self.max_iterations.get(),
-            self.num_repeats.get(),
             self.num_outputs.get()
         )
         self.y_log = Var(

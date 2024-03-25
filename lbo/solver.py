@@ -1,6 +1,7 @@
 from lava.magma.core.run_configs import Loihi2SimCfg
 from lava.magma.core.run_conditions import RunContinuous
 
+from copy import deepcopy
 import os
 from omegaconf import DictConfig
 from skopt.space import Space
@@ -106,26 +107,13 @@ class BOSolver:
         TODO Finish Documentation
         """
 
+        self.optimizer_config.num_params = len(search_space.dimensions)
+
         self.optimizer: BaseOptimizerProcess = optimizer_factory(
             optimizer_class=self.optimizer_class,
             optimizer_config=self.optimizer_config,
             search_space=search_space
         )
-
-        if not isinstance(function, BaseFunctionProcess) and callable(function):
-            import inspect
-            sig = inspect.signature(function)
-            function_process = AbstractFunctionProcess(
-                config=self.optimizer_config,
-                function=function,
-                search_space=search_space
-            )
-            print(sig.parameters)
-            print("Function is callable")
-            # exit()
-        else:
-            function_process = function
-
 
         # -------------------------------------------------------
         # For each unique process, connect the unique input and
@@ -133,14 +121,28 @@ class BOSolver:
         # output ports of the process
         # -------------------------------------------------------
         num_processes: int = self.optimizer.num_processes.get()
-        unique_processes = [function_process() for _ in range(num_processes)]
-        for i in range(num_processes):
-            optimizer_input_port = eval(f"self.optimizer.input_port_{i}")
-            optimizer_output_port = eval(f"self.optimizer.output_port_{i}")
-            process = unique_processes[i]
+        unique_processes: list = []
 
-            optimizer_output_port.connect(process.input_port)
-            process.output_port.connect(optimizer_input_port)
+        func_config = DictConfig({
+            "num_params": self.optimizer_config.num_params,
+            "num_outputs": self.optimizer_config.num_outputs
+        })
+
+        for i in range(num_processes):
+            if not isinstance(function, BaseFunctionProcess) and callable(function):
+                function_process = AbstractFunctionProcess(
+                    config=func_config,
+                    function=function,
+                    search_space=search_space
+                )
+            else:
+                function_process = function
+
+            opt_input_port = eval(f"self.optimizer.input_port_{i}")
+            opt_output_port = eval(f"self.optimizer.output_port_{i}")
+            opt_output_port.connect(function_process.input_port)
+            function_process.output_port.connect(opt_input_port)
+            unique_processes.append(function_process)
 
         finished: bool = False
 
