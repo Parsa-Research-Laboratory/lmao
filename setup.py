@@ -17,5 +17,5 @@ if __name__ == "__main__":
         description = "Bayesian Optimization in Lava",
         maintainer="Mavi, Derek, Shay",
         maintainer_email="ssnyde9@gmu.edu",
-        packages=["bo"]
+        packages=["lbo"]
     )
