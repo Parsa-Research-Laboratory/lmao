@@ -45,13 +45,13 @@ def function_factory(function_name: str, return_lp: bool = True) -> Callable:
         ValueError: If the given function name is not found.
     """
     if function_name == "ackley":
-        from hdbo.test_functions.ackley.ackley import SEARCH_SPACE, MINIMA
+        from lbo.test_functions.ackley.ackley import SEARCH_SPACE, MINIMA
 
         if return_lp:
-            from hdbo.test_functions.ackley.process import AckleyProcess
+            from lbo.test_functions.ackley.process import AckleyProcess
             return AckleyProcess, SEARCH_SPACE, MINIMA
         else:
-            from hdbo.test_functions.ackley.ackley import ackley_function
+            from lbo.test_functions.ackley.ackley import ackley_function
             return ackley_function, SEARCH_SPACE, MINIMA
 
     else:
@@ -77,10 +77,10 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
     """
 
     if optimizer_class == "vsa-cpu":
-        from hdbo.optimizers.vsa import VSAOptimizerProcess
+        from lbo.optimizers.vsa import VSAOptimizerProcess
         return VSAOptimizerProcess(optimizer_config, search_space)
     elif optimizer_class == "gp-cpu":
-        from hdbo.optimizers.gpr import GPROptimizerProcess
+        from lbo.optimizers.gpr import GPROptimizerProcess
         return GPROptimizerProcess(optimizer_config, search_space)
     else:
         raise ValueError(f"Optimizer {optimizer_class} not found")

@@ -6,7 +6,7 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 import numpy as np
 
-from hdbo.test_functions.ackley.process import AckleyProcess
+from lbo.test_functions.ackley.process import AckleyProcess
 
 
 @implements(proc=AckleyProcess, protocol=LoihiProtocol)

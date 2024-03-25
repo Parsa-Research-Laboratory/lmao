@@ -2,7 +2,7 @@ from setuptools import setup
 
 if __name__ == "__main__":
     setup(
-        name="hdbo",
+        name="lbo",
         version="0.0.1",
         install_requires=[
             "ipykernel",
@@ -14,8 +14,8 @@ if __name__ == "__main__":
         ],
         author="Mavi, Derek, Shay",
         author_email="ssnyde9@gmu.edu",
-        description = "Hyperdimensional Bayesian Optimization in Lava",
+        description = "Bayesian Optimization in Lava",
         maintainer="Mavi, Derek, Shay",
         maintainer_email="ssnyde9@gmu.edu",
-        packages=["hdbo"]
+        packages=["bo"]
     )

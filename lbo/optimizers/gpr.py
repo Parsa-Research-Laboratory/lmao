@@ -13,7 +13,7 @@ from skopt import Optimizer
 from skopt.space import Space
 import time
 
-from hdbo.optimizers.base import BaseOptimizerProcess
+from lbo.optimizers.base import BaseOptimizerProcess
 
 
 class GPROptimizerProcess(BaseOptimizerProcess):
