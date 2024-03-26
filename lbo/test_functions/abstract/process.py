@@ -58,7 +58,12 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
 
     def __init__(self, proc_params: ProcessParameters, **kwargs):
         """
-        TODO Finish Documentation
+        Initialize the Process class.
+
+        Args:
+            proc_params (ProcessParameters): The process parameters.
+            **kwargs: Additional keyword arguments.
+
         """
         super().__init__(**kwargs)
 
@@ -66,7 +71,14 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
 
     def run_spk(self):
         """
-        TODO Finish Documentation
+        Run the user-defined function.
+
+        This method receives input data from the input port, applies the
+        user-defined function to the input data, and sends the output packet
+        to the output port.
+
+        Returns:
+            None
         """
         if self.input_port.probe():
             input_data = self.input_port.recv()
