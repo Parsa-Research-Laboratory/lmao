@@ -64,6 +64,7 @@ class GPROptimizerProcess(BaseOptimizerProcess):
 
         super().__init__(num_params=search_space.n_dims,
                          num_processes=config.get("num_processes", 1),
+                         num_repeats=config.get("num_repeats", 1),
                          num_outputs=config.get("num_outputs", 1),
                          **kwargs)
 
@@ -223,7 +224,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 # send an initial point to each of the 
                 for i in range(self.num_processes):
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
-                    output_data: list = self.optimizer.ask(n_points=self.num_repeats)
+                    output_data: list = self.optimizer.ask()
                     output_data: np.ndarray = np.array(output_data)
                     output_port.send(output_data)
 
@@ -235,17 +236,15 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     start_time: float = time.time()
                     new_data: np.ndarray = input_port.recv()
 
-                    self.x_log[self.time_step, :, :] = new_data[:, :self.num_params]
-                    self.y_log[self.time_step, :, :] = new_data[:, self.num_params:]
+                    self.x_log[self.time_step, :] = new_data[:self.num_params]
+                    self.y_log[self.time_step, :] = new_data[self.num_params:]
 
-                    x = new_data[:, :self.num_params].tolist()
-                    y = new_data[:, self.num_params:].tolist()
-                    y = [val[0] for val in y]
+                    x = new_data[:self.num_params].tolist()
+                    y = new_data[self.num_params:].item()
 
                     self.optimizer.tell(x, y)
 
                     output_data: list = self.optimizer.ask(
-                        n_points=self.num_repeats,
                         strategy=self.asking_strategy
                     )
                     output_data: np.ndarray = np.array(output_data)

@@ -8,17 +8,18 @@ from lava.magma.core.model.py.type import LavaPyType
 from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 import numpy as np
-from omegaconf import DictConfig
 from skopt.space import Space
 from typing import Callable, Tuple
 
+from lbo.test_functions.base.process import BaseFunctionProcess, validate_base_args
 
-class AbstractFunctionProcess(AbstractProcess):
+class AbstractFunctionProcess(BaseFunctionProcess):
     """
     The AbstractFunctionProcess class represents an abstract process for a function in Lava.
     """
 
-    def __init__(self, config: DictConfig, function: Callable, search_space: Space, **kwargs):
+    def __init__(self, num_params: int, num_outputs: int, function: Callable,
+                 search_space: Space, **kwargs):
         """
         Initializes the AbstractFunctionProcess object.
 
@@ -27,30 +28,22 @@ class AbstractFunctionProcess(AbstractProcess):
             search_space (Space): The search space for the function.
         """
 
-        assert isinstance(config, DictConfig), "config must be a DictConfig"
+        validate_base_args(num_params, num_outputs)
+
         assert callable(function), "function must be a callable"
         assert isinstance(search_space, Space), "search_space must be a Space"
-        assert config.num_params > 0, "num_params must be greater than 0"
-        assert config.num_outputs == 1, "num_outputs must be equal to 1"
 
         process_params = ProcessParameters(initial_parameters={
-            function: function,
+            "function": function,
             # search_space: search_space
         })
 
         super().__init__(
+            num_params=num_params,
+            num_outputs=num_outputs,
             process_params=process_params,
             **kwargs
         )
-
-        self.num_params = Var(shape=(1,), init=config.num_params)
-        self.num_outputs = Var(shape=(1,), init=config.num_outputs)
-
-        input_shape: Tuple = (self.num_params.get(),)
-        output_shape: Tuple = (self.num_params.get() + self.num_outputs.get(),)
-
-        self.input_port = InPort(shape=input_shape)
-        self.output_port = OutPort(shape=output_shape)
 
 
 @implements(proc=AbstractFunctionProcess, protocol=LoihiProtocol)
@@ -62,11 +55,30 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
 
     num_params = LavaPyType(int, int)
     num_outputs = LavaPyType(int, int)
-    num_repeats = LavaPyType(int, int)
 
-    def run_spk(self, process_params: ProcessParameters):
+    def __init__(self, proc_params: ProcessParameters, **kwargs):
         """
         TODO Finish Documentation
         """
-        print(process_params)
-        print("Running Abstract Function Process Model")
+        super().__init__(**kwargs)
+
+        self.user_function: Callable = proc_params["process_params"]["function"]
+
+    def run_spk(self):
+        """
+        TODO Finish Documentation
+        """
+        if self.input_port.probe():
+            input_data = self.input_port.recv()
+
+            y = self.user_function(*input_data)
+
+            print(f"Y: {y}")
+
+            output_packet = np.zeros((self.num_outputs + self.num_params,))
+            output_packet[:self.num_params] = input_data
+            output_packet[-1] = y
+
+            self.output_port.send(output_packet)
+
+

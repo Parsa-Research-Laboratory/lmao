@@ -123,15 +123,11 @@ class BOSolver:
         num_processes: int = self.optimizer.num_processes.get()
         unique_processes: list = []
 
-        func_config = DictConfig({
-            "num_params": self.optimizer_config.num_params,
-            "num_outputs": self.optimizer_config.num_outputs
-        })
-
         for i in range(num_processes):
             if not isinstance(function, BaseFunctionProcess) and callable(function):
                 function_process = AbstractFunctionProcess(
-                    config=func_config,
+                    num_params=self.optimizer_config.num_params,
+                    num_outputs=self.optimizer_config.num_outputs,
                     function=function,
                     search_space=search_space
                 )

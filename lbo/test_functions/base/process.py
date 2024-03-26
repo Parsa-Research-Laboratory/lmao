@@ -3,6 +3,16 @@ from lava.magma.core.process.ports.ports import InPort, OutPort
 from lava.magma.core.process.variable import Var
 
 
+def validate_base_args(num_params, num_outputs):
+    """
+    TODO Finish Documentation
+    """
+    assert isinstance(num_params, int), "num_params must be an integer"
+    assert isinstance(num_outputs, int), "num_outputs must be an integer"
+    assert num_params > 0, "num_params must be greater than 0"
+    assert num_outputs == 1, "num_outputs must be equal to 1"
+
+
 class BaseFunctionProcess(AbstractProcess):
     """
     Represents a base function for evaluation.
@@ -32,10 +42,7 @@ class BaseFunctionProcess(AbstractProcess):
         """
         super().__init__(**kwargs)
 
-        assert isinstance(num_params, int)
-        assert isinstance(num_outputs, int)
-        assert num_params > 0
-        assert num_outputs == 1
+        validate_base_args(num_params, num_outputs)
 
         self.num_params = Var(shape=(1,), init=num_params)
         self.num_outputs = Var(shape=(1,), init=num_outputs)
