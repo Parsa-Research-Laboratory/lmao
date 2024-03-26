@@ -73,13 +73,13 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         # ------------------------
         self.max_iterations = Var(
             shape=(1,),
-            init=config.get("max_iterations", 20)
+            init=config.max_iterations
         )
         self.num_initial_points = Var(
             shape=(1,),
-            init=config.get("num_initial_points", 5)
+            init=config.num_initial_points
         )
-        self.seed = Var(shape=(1,), init=config.get("seed", 0))
+        self.seed = Var(shape=(1,), init=config.seed)
 
         # ------------------------
         # Internal State Variables
@@ -182,10 +182,11 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     time_log = LavaPyType(np.ndarray, np.float32)    
 
     def __init__(self, proc_params: ProcessParameters, *args, **kwargs):
+        """
+        TODO Finish Documentation
+        """
         super().__init__(*args, **kwargs)
-
-        print(proc_params._parameters)
-        print(*args, **kwargs)    
+   
 
     def run_async(self):
         """
@@ -205,6 +206,12 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
             
             # Send initial point to prime the system
             if self.time_step == 0:
+
+                # --------------------------------------------------------------
+                # TODO CREATE A CLEAN INTERFACE FOR USER TO DEFINE SEARCH SPACE
+                # --------------------------------------------------------------
+                search_space = [(-32.0, 32.0)] * self.num_params
+
                 self.acquisition_function: str = "gp_hedge"
                 self.acquisition_optimizer: str = "auto"
                 self.asking_strategy: str = "cl_min"
@@ -212,7 +219,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 self.initial_point_estimator: str = "random"
                 
                 self.optimizer = Optimizer(
-                    dimensions=[(-32.0, 32.0)] * self.num_params,
+                    dimensions=search_space,
                     acq_func=self.acquisition_function,
                     acq_optimizer=self.acquisition_optimizer,
                     base_estimator=self.base_estimator,

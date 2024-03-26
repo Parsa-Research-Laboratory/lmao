@@ -29,15 +29,21 @@ def get_config() -> DictConfig:
         help="The function to optimize",
     )
     parser.add_argument(
+        "--return-lp",
+        action="store_true",
+        help="Return the Lava process wrapper for the function",
+    )
+    parser.add_argument(
         "--max-iter",
         type=int,
         default=50,
+        dest="max_iterations",
         help="The maximum number of iterations to run",
     )
     parser.add_argument(
         "--num_initial_points",
         type=int,
-        default=10,
+        default=25,
         help="The number of initial points to use for optimizer initialization",
     )
     parser.add_argument(
@@ -58,6 +64,12 @@ def get_config() -> DictConfig:
         default="gp-cpu",
         help="The class of optimizer to use",
         choices=VALID_SOLVERS
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="The random seed to use for the optimization process",
     )
 
     args = parser.parse_args()
@@ -86,11 +98,13 @@ def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
     print(delimiter * delimiter_width)
     print(f"Configuration:")
     print(f" - Black Box Function: {config.function}")
-    print(f" - Max Iterations: {config.max_iter}")
+    print(f" - Return Lava Process: {config.return_lp}")
+    print(f" - Max Iterations: {config.max_iterations}")
     print(f" - Number of Initial Points: {config.num_initial_points}")
     print(f" - Number of Processes: {config.num_processes}")
     print(f" - Number of Repeats: {config.num_repeats}")
     print(f" - Optimizer Class: {config.optimizer_class}")
+    print(f" - Random Seed: {config.seed}")
     print(delimiter * delimiter_width)
 
 
@@ -109,9 +123,13 @@ def main(config: DictConfig):
     print_intro(config)
 
     config.optimizer = config_factory(config)
-    function_process, search_space, minima = function_factory(config.function, return_lp=False)
+    function_process, search_space, minima = function_factory(config.function, return_lp=config.return_lp)
     solver = BOSolver(config)
-    solver.solve(function_process, search_space)
+    solver.solve(
+        ufunc=function_process,
+        use_lp=config.return_lp,
+        search_space=search_space
+    )
 
 
 if __name__ == "__main__":

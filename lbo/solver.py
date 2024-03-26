@@ -1,7 +1,7 @@
 from lava.magma.core.run_configs import Loihi2SimCfg
 from lava.magma.core.run_conditions import RunContinuous
+from lava.magma.core.process.process import AbstractProcess
 
-from copy import deepcopy
 import os
 from omegaconf import DictConfig
 from skopt.space import Space
@@ -28,9 +28,9 @@ def validate_config(config: DictConfig) -> None:
     """
     assert isinstance(config, DictConfig), "config must be a dictionary"
 
-    assert "max_iter" in config, "max_iter must be in config"
-    assert isinstance(config.max_iter, int), "max_iter must be an integer"
-    assert config.max_iter > 0, "max_iter must be greater than 0"
+    assert "max_iterations" in config, "max_iter must be in config"
+    assert isinstance(config.max_iterations, int), "max_iter must be an integer"
+    assert config.max_iterations > 0, "max_iter must be greater than 0"
 
     assert "num_initial_points" in config, \
         "num_initial_points must be in config"
@@ -82,7 +82,7 @@ class BOSolver:
         """
         validate_config(config)
 
-        self.max_iter: int = config.max_iter
+        self.max_iter: int = config.max_iterations
         self.num_initial_points: int = config.num_initial_points
         self.num_repeats: int = config.num_repeats
         self.optimizer_class: str = config.optimizer_class
@@ -101,7 +101,7 @@ class BOSolver:
         os.environ["LAVA_BO_NUM_PROCESSES"] = \
             str(self.optimizer_config.num_processes)
 
-    def solve(self, function: Union[BaseFunctionProcess, callable],
+    def solve(self, ufunc: Union[BaseFunctionProcess, callable], use_lp: bool,
               search_space: Space) -> None:
         """
         TODO Finish Documentation
@@ -124,15 +124,15 @@ class BOSolver:
         unique_processes: list = []
 
         for i in range(num_processes):
-            if not isinstance(function, BaseFunctionProcess) and callable(function):
+            if use_lp:
+                function_process = ufunc()
+            else:
                 function_process = AbstractFunctionProcess(
                     num_params=self.optimizer_config.num_params,
                     num_outputs=self.optimizer_config.num_outputs,
-                    function=function,
+                    function=ufunc,
                     search_space=search_space
                 )
-            else:
-                function_process = function
 
             opt_input_port = eval(f"self.optimizer.input_port_{i}")
             opt_output_port = eval(f"self.optimizer.output_port_{i}")
