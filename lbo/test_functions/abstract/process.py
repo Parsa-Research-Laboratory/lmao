@@ -1,15 +1,13 @@
 from lava.magma.core.model.py.model import PyLoihiProcessModel
 from lava.magma.core.decorator import implements, requires, tag
-from lava.magma.core.process.ports.ports import InPort, OutPort
-from lava.magma.core.process.process import AbstractProcess, ProcessParameters
-from lava.magma.core.process.variable import Var
+from lava.magma.core.process.process import ProcessParameters
 from lava.magma.core.resources import CPU
 from lava.magma.core.model.py.type import LavaPyType
 from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 import numpy as np
 from skopt.space import Space
-from typing import Callable, Tuple
+from typing import Callable
 
 from lbo.test_functions.base.process import BaseFunctionProcess, validate_base_args
 
@@ -35,7 +33,6 @@ class AbstractFunctionProcess(BaseFunctionProcess):
 
         process_params = ProcessParameters(initial_parameters={
             "function": function,
-            # search_space: search_space
         })
 
         super().__init__(
@@ -85,7 +82,10 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
 
             y = self.user_function(*input_data).astype(np.float32)
 
-            output_packet = np.zeros((self.num_outputs + self.num_params,), dtype=np.float32)
+            output_packet = np.zeros(
+                shape=(self.num_outputs + self.num_params,),
+                dtype=np.float32
+            )
             output_packet[:self.num_params] = input_data
             output_packet[0] = input_data[0]
             output_packet[1] = input_data[1]
