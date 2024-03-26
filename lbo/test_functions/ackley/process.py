@@ -85,7 +85,7 @@ class PyAckleyProcessModel(PyLoihiProcessModel):
         if self.input_port.probe():
             input_data = self.input_port.recv()
 
-            output_packet = np.zeros((self.num_outputs + self.num_params))
+            output_packet = np.zeros((self.num_outputs + self.num_params), dtype=np.float32)
             output_packet[:self.num_params] = input_data
 
             x0 = input_data[0]
@@ -95,10 +95,8 @@ class PyAckleyProcessModel(PyLoihiProcessModel):
                 - np.exp(0.5 * (np.cos(self.c * x0) + np.cos(self.c * x1))) \
                 + self.a + np.exp(1)
 
-            print(f"Y: {y}")
-
             output_packet[self.num_params:] = y
-            
+
             self.output_port.send(output_packet)
         else:
             pass

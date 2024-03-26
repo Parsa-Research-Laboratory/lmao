@@ -11,7 +11,7 @@ import numpy as np
 from omegaconf import DictConfig
 import os
 from skopt import Optimizer
-from skopt.space import Space
+from skopt.space import Space, Real, Integer
 import time
 
 from lbo.optimizers.base import BaseOptimizerProcess
@@ -113,6 +113,28 @@ class GPROptimizerProcess(BaseOptimizerProcess):
             init=np.zeros(time_log_shape)
         )
 
+        # ------------------
+        # Search Space
+        # ------------------
+        search_space_shape: tuple = (search_space.n_dims,3)
+        local_search_space: np.ndarray = np.zeros(search_space_shape, dtype=np.float32)
+
+        for i, dim in enumerate(search_space.dimensions):
+            if isinstance(dim, Real):
+                local_search_space[i, 0] = dim.low
+                local_search_space[i, 1] = dim.high
+            elif isinstance(dim, Integer):
+                local_search_space[i, 0] = dim.low
+                local_search_space[i, 1] = dim.high
+                local_search_space[i, 2] = 1.0
+            else:
+                raise ValueError(f"Unsupported dimension type: {type(dim)}")
+            
+        self.search_space = Var(
+            shape=search_space_shape,
+            init=local_search_space
+        )
+
 @implements(proc=GPROptimizerProcess, protocol=AsyncProtocol)
 @requires(CPU)
 @tag('floating_pt')
@@ -166,6 +188,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     max_iterations = LavaPyType(int, int)
     num_initial_points = LavaPyType(int, int)
     seed = LavaPyType(int, int)
+    search_space = LavaPyType(np.ndarray, object)
 
     # ------------------------
     # Internal State Variables
@@ -207,10 +230,15 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
             # Send initial point to prime the system
             if self.time_step == 0:
 
-                # --------------------------------------------------------------
-                # TODO CREATE A CLEAN INTERFACE FOR USER TO DEFINE SEARCH SPACE
-                # --------------------------------------------------------------
-                search_space = [(-32.0, 32.0)] * self.num_params
+                decoded_search_space = []
+                for i in range(self.search_space.shape[0]):
+                    dim = self.search_space[i]
+                    if dim[2] == 0.0:
+                        decoded_search_space.append(Real(dim[0], dim[1]))
+                    elif dim[2] == 1.0:
+                        decoded_search_space.append(Integer(dim[0], dim[1]))
+                    else:
+                        raise ValueError(f"Unsupported dimension type: {dim[0]}")
 
                 self.acquisition_function: str = "gp_hedge"
                 self.acquisition_optimizer: str = "auto"
@@ -219,7 +247,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 self.initial_point_estimator: str = "random"
                 
                 self.optimizer = Optimizer(
-                    dimensions=search_space,
+                    dimensions=decoded_search_space,
                     acq_func=self.acquisition_function,
                     acq_optimizer=self.acquisition_optimizer,
                     base_estimator=self.base_estimator,
@@ -228,11 +256,14 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     random_state=self.seed
                 )
 
-                # send an initial point to each of the 
+                # send an initial point to each of the process
+                output_data: list = self.optimizer.ask(
+                    n_points=self.num_processes,
+                    strategy=self.asking_strategy
+                )
                 for i in range(self.num_processes):
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
-                    output_data: list = self.optimizer.ask()
-                    output_data: np.ndarray = np.array(output_data)
+                    output_data: np.ndarray = np.array(output_data[i])                
                     output_port.send(output_data)
 
             if self.time_step < self.max_iterations:
@@ -245,9 +276,11 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
 
                     self.x_log[self.time_step, :] = new_data[:self.num_params]
                     self.y_log[self.time_step, :] = new_data[self.num_params:]
-
+    
                     x = new_data[:self.num_params].tolist()
                     y = new_data[self.num_params:].item()
+
+                    print(f"Optimizer [{self.time_step}]: {new_data}")
 
                     self.optimizer.tell(x, y)
 

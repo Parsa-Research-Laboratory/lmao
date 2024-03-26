@@ -83,12 +83,12 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
         if self.input_port.probe():
             input_data = self.input_port.recv()
 
-            y = self.user_function(*input_data)
+            y = self.user_function(*input_data).astype(np.float32)
 
-            print(f"Y: {y}")
-
-            output_packet = np.zeros((self.num_outputs + self.num_params,))
+            output_packet = np.zeros((self.num_outputs + self.num_params,), dtype=np.float32)
             output_packet[:self.num_params] = input_data
+            output_packet[0] = input_data[0]
+            output_packet[1] = input_data[1]
             output_packet[-1] = y
 
             self.output_port.send(output_packet)
