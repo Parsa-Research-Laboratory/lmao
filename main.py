@@ -25,7 +25,7 @@ def get_config() -> DictConfig:
         "--function",
         type=str,
         choices=VALID_FUNCTIONS,
-        default="ackley",
+        default="nmnist",
         help="The function to optimize",
     )
     parser.add_argument(
