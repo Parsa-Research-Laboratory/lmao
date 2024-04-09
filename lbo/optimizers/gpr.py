@@ -85,7 +85,7 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         # ------------------------
         self.finished = Var(shape=(1,), init=0)
         self.process_ticker = Var(shape=(1,), init=0)
-        self.time_step = Var(shape=(1,), init=0)
+        self.time_step = Var(shape=(1,), init=-1)
 
         # ------------------------
         # Logging Variables
@@ -214,14 +214,16 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
         """
         while True:
             if self.check_for_pause_cmd():
+                print("Paused")
                 return
             
             if self.check_for_stop_cmd():
+                print("Stopped")
                 return
             
+            
             # Send initial point to prime the system
-            if self.time_step == 0:
-
+            if self.time_step == -1:
                 decoded_search_space = []
                 for i in range(self.search_space.shape[0]):
                     dim = self.search_space[i]
@@ -254,17 +256,29 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     strategy=self.asking_strategy
                 )
                 for i in range(self.num_processes):
+                    print(f"output_data: {output_data[i]}")
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
                     output_data: np.ndarray = np.array(output_data[i])                
                     output_port.send(output_data)
 
+                # Iterate to 0 to get out of the initialization and process
+                # priming state
+                self.time_step += 1
+
             if self.time_step < self.max_iterations:
+                
                 input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
                 output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
                 self.process_ticker = (self.process_ticker + 1) % self.num_processes
                 if input_port.probe():
+                    print(f"Max Iterations: {self.time_step} {self.max_iterations}")
+                    print("Data on port")
                     start_time: float = time.time()
+                    print("Receiving")
                     new_data: np.ndarray = input_port.recv()
+                    print("Received")
+
+                    print("new_data: ", new_data)
 
                     self.x_log[self.time_step, :] = new_data[:self.num_params]
                     self.y_log[self.time_step, :] = new_data[self.num_params:]
@@ -272,13 +286,13 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     x = new_data[:self.num_params].tolist()
                     y = new_data[self.num_params:].item()
 
-                    print(f"Optimizer [{self.time_step}]: {new_data}")
-
                     self.optimizer.tell(x, y)
 
                     output_data: list = self.optimizer.ask(
                         strategy=self.asking_strategy
                     )
+
+                    print(f"out_data: {output_data}")
                     output_data: np.ndarray = np.array(output_data)
                     output_port.send(output_data)
 

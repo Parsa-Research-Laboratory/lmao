@@ -141,14 +141,19 @@ class BOSolver:
 
         finished: bool = False
 
-        while not finished:
-            self.optimizer.run(RunContinuous(), Loihi2SimCfg()) 
+        
+        print("running")
 
+        while not finished:
+            self.optimizer.run(RunContinuous(), Loihi2SimCfg())
             time.sleep(1)
 
             self.optimizer.pause()
 
             if self.optimizer.finished.get():
+                print("finished")
                 finished = True
+            else:
+                print("not finished")
 
         self.optimizer.stop()

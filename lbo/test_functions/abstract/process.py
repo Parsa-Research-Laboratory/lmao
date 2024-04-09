@@ -82,6 +82,9 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
 
             y = self.user_function(*input_data).astype(np.float32)
 
+            print(y)
+
+
             output_packet = np.zeros(
                 shape=(self.num_outputs + self.num_params,),
                 dtype=np.float32
@@ -92,5 +95,7 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
             output_packet[-1] = y
 
             self.output_port.send(output_packet)
+
+            print("sent")
 
 
