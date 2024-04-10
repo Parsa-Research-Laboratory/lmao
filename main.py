@@ -1,13 +1,13 @@
 import argparse
 from omegaconf import DictConfig
 
-from lbo.factory import (
+from lmaao.factory import (
     config_factory,
     function_factory,
     VALID_FUNCTIONS,
     VALID_SOLVERS
 )
-from lbo.solver import BOSolver
+from lmaao.solver import BOSolver
 
 DESCRIPTION = "Hyperdimensional Bayesian Optimization in Lava"
 

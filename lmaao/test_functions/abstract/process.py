@@ -9,7 +9,7 @@ import numpy as np
 from skopt.space import Space
 from typing import Callable
 
-from lbo.test_functions.base.process import BaseFunctionProcess, validate_base_args
+from lmaao.test_functions.base.process import BaseFunctionProcess, validate_base_args
 
 class AbstractFunctionProcess(BaseFunctionProcess):
     """
