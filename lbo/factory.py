@@ -4,6 +4,10 @@ from typing import Callable
 
 VALID_FUNCTIONS = [
     "ackley",
+    "himmelblau",
+    "goldsteinprice",
+    "pilotnet",
+    "nmnist"
 ]
 
 VALID_SOLVERS = [
@@ -44,6 +48,7 @@ def function_factory(function_name: str, return_lp: bool = True) -> Callable:
     Raises:
         ValueError: If the given function name is not found.
     """
+    print(return_lp)
     if function_name == "ackley":
         from lbo.test_functions.ackley.ackley import SEARCH_SPACE, MINIMA
 
@@ -54,6 +59,37 @@ def function_factory(function_name: str, return_lp: bool = True) -> Callable:
             from lbo.test_functions.ackley.ackley import ackley_function
             return ackley_function, SEARCH_SPACE, MINIMA
 
+    elif function_name == "himmelblau":
+        from lbo.test_functions.himmelblau.himmelblau import SEARCH_SPACE, MINIMA
+        if return_lp:
+            from lbo.test_functions.himmelblau.process import HimmelblauProcess
+            return HimmelblauProcess, SEARCH_SPACE, MINIMA
+        else:
+            from lbo.test_functions.himmelblau.himmelblau import himmelblau_function
+            return himmelblau_function, SEARCH_SPACE, MINIMA
+
+    elif function_name == "goldsteinprice":
+        from lbo.test_functions.goldsteinprice.goldsteinprice import SEARCH_SPACE, MINIMA
+        if return_lp:
+            from lbo.test_functions.goldsteinprice.process import GoldsteinPriceProcess
+            return GoldsteinPriceProcess, SEARCH_SPACE, MINIMA
+        else:
+            from lbo.test_functions.goldsteinprice.goldsteinprice import goldsteinprice_function
+            return goldsteinprice_function, SEARCH_SPACE, MINIMA
+    elif function_name == "pilotnet":
+        from lbo.test_functions.pilotnet.pilotnet import SEARCH_SPACE,MINIMA
+        if return_lp:
+            from lbo.test_functions.pilotnet.process import PilotNetProcess
+            return PilotNetProcess, SEARCH_SPACE, MINIMA
+        else:
+            raise Exception("Pilotnet is only available as process for hyperparameter optimization")
+    elif function_name == "nmnist":
+        from lbo.test_functions.nmnist.nmnist import SEARCH_SPACE,MINIMA
+        if return_lp:
+            from lbo.test_functions.nmnist.process import NmnistProcess
+            return NmnistProcess, SEARCH_SPACE, MINIMA
+        else:
+            raise Exception("Nmnist is only available as process for hyperparameter optimization")
     else:
         raise ValueError(f"Function {function_name} not found")
 
