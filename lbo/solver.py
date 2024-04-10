@@ -4,6 +4,7 @@ from lava.magma.core.run_conditions import RunContinuous
 import os
 from omegaconf import DictConfig
 from skopt.space import Space
+import sys
 import time
 from typing import Union
 
@@ -83,22 +84,28 @@ class BOSolver:
 
         self.max_iter: int = config.max_iterations
         self.num_initial_points: int = config.num_initial_points
+        self.num_processes: int = config.num_processes
         self.num_repeats: int = config.num_repeats
         self.optimizer_class: str = config.optimizer_class
         self.optimizer_config: DictConfig = config.optimizer
+        self.seed: int = config.seed
 
+        # ---------------------------------------------------------
         # Update the optimizer configuration based on the specific
         # configuration for the Solver
+        # ---------------------------------------------------------
+        self.optimizer_config.max_iterations = self.max_iter
+        self.optimizer_config.num_processes = self.num_processes
         self.optimizer_config.num_repeats = self.num_repeats
         self.optimizer_config.num_outputs = 1
+        self.optimizer_config.seed = self.seed
 
         # ----------------------------------------------------------
         # Variables for ProcessModel Compilation
         #
         # Set the environment variable for the number of processes
         # ----------------------------------------------------------
-        os.environ["LAVA_BO_NUM_PROCESSES"] = \
-            str(self.optimizer_config.num_processes)
+        os.environ["LAVA_BO_NUM_PROCESSES"] = str(self.num_processes)
 
     def solve(self, ufunc: Union[BaseFunctionProcess, callable], use_lp: bool,
               search_space: Space) -> None:
@@ -141,19 +148,28 @@ class BOSolver:
 
         finished: bool = False
 
-        
-        print("running")
+        try:
+            while not finished:
+                self.optimizer.run(RunContinuous(), Loihi2SimCfg())
+                time.sleep(1)
 
-        while not finished:
-            self.optimizer.run(RunContinuous(), Loihi2SimCfg())
-            time.sleep(1)
+                self.optimizer.pause()
 
-            self.optimizer.pause()
+                if self.optimizer.finished.get():
+                    x_log = self.optimizer.x_log.get()
+                    y_log = self.optimizer.y_log.get()
+                    finished = True
 
-            if self.optimizer.finished.get():
-                print("finished")
-                finished = True
-            else:
-                print("not finished")
+        except KeyboardInterrupt:
+            print("Received KBD Interrupt. Stopping Solver")
+            self.optimizer.stop()
+            sys.exit()
+        finally:
+            self.optimizer.stop()
 
-        self.optimizer.stop()
+        results = {
+            "x_log": x_log,
+            "y_log": y_log
+        }
+
+        return results

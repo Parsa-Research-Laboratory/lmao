@@ -106,6 +106,10 @@ class GPROptimizerProcess(BaseOptimizerProcess):
             shape=y_log_shape,
             init=np.zeros(y_log_shape)
         )
+        self.y_log_min = Var(
+            shape=y_log_shape,
+            init=np.zeros(y_log_shape)
+        )
         time_log_shape: tuple = (self.max_iterations.get(),)
         self.time_log = Var(
             shape=time_log_shape,
@@ -201,6 +205,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     # ------------------------
     x_log = LavaPyType(np.ndarray, np.float32)
     y_log = LavaPyType(np.ndarray, np.float32)
+    y_log_min = LavaPyType(np.ndarray, np.float32)
     time_log = LavaPyType(np.ndarray, np.float32)       
 
     def run_async(self):
@@ -214,7 +219,6 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
         """
         while True:
             if self.check_for_pause_cmd():
-                print("Paused")
                 return
             
             if self.check_for_stop_cmd():
@@ -256,7 +260,6 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     strategy=self.asking_strategy
                 )
                 for i in range(self.num_processes):
-                    print(f"output_data: {output_data[i]}")
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
                     output_data: np.ndarray = np.array(output_data[i])                
                     output_port.send(output_data)
@@ -271,14 +274,9 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
                 self.process_ticker = (self.process_ticker + 1) % self.num_processes
                 if input_port.probe():
-                    print(f"Max Iterations: {self.time_step} {self.max_iterations}")
-                    print("Data on port")
+                    # print(f"LMAAO: {self.time_step}/{self.max_iterations}\r")
                     start_time: float = time.time()
-                    print("Receiving")
                     new_data: np.ndarray = input_port.recv()
-                    print("Received")
-
-                    print("new_data: ", new_data)
 
                     self.x_log[self.time_step, :] = new_data[:self.num_params]
                     self.y_log[self.time_step, :] = new_data[self.num_params:]
@@ -292,7 +290,6 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                         strategy=self.asking_strategy
                     )
 
-                    print(f"out_data: {output_data}")
                     output_data: np.ndarray = np.array(output_data)
                     output_port.send(output_data)
 
