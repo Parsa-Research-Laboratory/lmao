@@ -1,15 +1,15 @@
 import argparse
 from omegaconf import DictConfig
 
-from lmaao.factory import (
+from lmao.factory import (
     config_factory,
     function_factory,
     VALID_FUNCTIONS,
     VALID_SOLVERS
 )
-from lmaao.solver import BOSolver
+from lmao.solver import BOSolver
 
-DESCRIPTION = "Lava Multi-Agent Asynchronous Optimization (LMAAO)"
+DESCRIPTION = "Lava Multi-Agent Optimization (LMAO)"
 
 
 def get_config() -> DictConfig:

@@ -2,7 +2,7 @@ from setuptools import setup
 
 if __name__ == "__main__":
     setup(
-        name="lmaao",
+        name="lmao",
         version="0.0.1",
         install_requires=[
             "h5py",
@@ -15,8 +15,8 @@ if __name__ == "__main__":
         ],
         author="Mavi, Derek, Shay",
         author_email="ssnyde9@gmu.edu",
-        description = "Lava Multi-Agent Asynchronous Optimization in Lava",
+        description = "Lava Multi-Agent Optimization in Lava",
         maintainer="Shay Snyder, Derek Gobin, Maria Victoria Clerico",
         maintainer_email="ssnyde9@gmu.edu",
-        packages=["lmaao"]
+        packages=["lmao"]
     )

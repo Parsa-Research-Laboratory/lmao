@@ -13,7 +13,7 @@ from skopt import Optimizer
 from skopt.space import Space, Real, Integer
 import time
 
-from lmaao.optimizers.base import BaseOptimizerProcess
+from lmao.optimizers.base import BaseOptimizerProcess
 
 
 class GridOptimizerProcess(BaseOptimizerProcess):
@@ -210,4 +210,5 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
             if self.time_step == -1:
                 decoded_search_space = []
                 for i in range(self.search_space.shape[0]):
+                    pass
                     

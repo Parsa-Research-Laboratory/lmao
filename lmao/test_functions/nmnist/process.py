@@ -9,8 +9,8 @@ from torch.utils.data import Dataset, DataLoader, Subset
 
 # import slayer from lava-dl
 import lava.lib.dl.slayer as slayer
-from lmaao.test_functions.nmnist.nmnist import augment, NMNISTDataset
-from lmaao.test_functions.base.process import BaseFunctionProcess
+from lmao.test_functions.nmnist.nmnist import augment, NMNISTDataset
+from lmao.test_functions.base.process import BaseFunctionProcess
 
 from lava.magma.core.model.py.model import PyLoihiProcessModel
 from lava.magma.core.decorator import implements, requires, tag

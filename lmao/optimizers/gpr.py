@@ -13,7 +13,7 @@ from skopt import Optimizer
 from skopt.space import Space, Real, Integer
 import time
 
-from lmaao.optimizers.base import BaseOptimizerProcess
+from lmao.optimizers.base import BaseOptimizerProcess
 
 
 class GPROptimizerProcess(BaseOptimizerProcess):
@@ -274,7 +274,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
                 self.process_ticker = (self.process_ticker + 1) % self.num_processes
                 if input_port.probe():
-                    # print(f"LMAAO: {self.time_step}/{self.max_iterations}\r")
+                    # print(f"LMAO: {self.time_step}/{self.max_iterations}\r")
                     start_time: float = time.time()
                     new_data: np.ndarray = input_port.recv()
 

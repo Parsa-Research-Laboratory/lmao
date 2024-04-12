@@ -48,45 +48,44 @@ def function_factory(function_name: str, return_lp: bool = True) -> Callable:
     Raises:
         ValueError: If the given function name is not found.
     """
-    print(return_lp)
     if function_name == "ackley":
-        from lmaao.test_functions.ackley.ackley import SEARCH_SPACE, MINIMA
+        from lmao.test_functions.ackley.ackley import SEARCH_SPACE, MINIMA
 
         if return_lp:
-            from lmaao.test_functions.ackley.process import AckleyProcess
+            from lmao.test_functions.ackley.process import AckleyProcess
             return AckleyProcess, SEARCH_SPACE, MINIMA
         else:
-            from lmaao.test_functions.ackley.ackley import ackley_function
+            from lmao.test_functions.ackley.ackley import ackley_function
             return ackley_function, SEARCH_SPACE, MINIMA
 
     elif function_name == "himmelblau":
-        from lmaao.test_functions.himmelblau.himmelblau import SEARCH_SPACE, MINIMA
+        from lmao.test_functions.himmelblau.himmelblau import SEARCH_SPACE, MINIMA
         if return_lp:
-            from lmaao.test_functions.himmelblau.process import HimmelblauProcess
+            from lmao.test_functions.himmelblau.process import HimmelblauProcess
             return HimmelblauProcess, SEARCH_SPACE, MINIMA
         else:
-            from lmaao.test_functions.himmelblau.himmelblau import himmelblau_function
+            from lmao.test_functions.himmelblau.himmelblau import himmelblau_function
             return himmelblau_function, SEARCH_SPACE, MINIMA
 
     elif function_name == "goldsteinprice":
-        from lmaao.test_functions.goldsteinprice.goldsteinprice import SEARCH_SPACE, MINIMA
+        from lmao.test_functions.goldsteinprice.goldsteinprice import SEARCH_SPACE, MINIMA
         if return_lp:
-            from lmaao.test_functions.goldsteinprice.process import GoldsteinPriceProcess
+            from lmao.test_functions.goldsteinprice.process import GoldsteinPriceProcess
             return GoldsteinPriceProcess, SEARCH_SPACE, MINIMA
         else:
-            from lmaao.test_functions.goldsteinprice.goldsteinprice import goldsteinprice_function
+            from lmao.test_functions.goldsteinprice.goldsteinprice import goldsteinprice_function
             return goldsteinprice_function, SEARCH_SPACE, MINIMA
     elif function_name == "pilotnet":
-        from lmaao.test_functions.pilotnet.pilotnet import SEARCH_SPACE,MINIMA
+        from lmao.test_functions.pilotnet.pilotnet import SEARCH_SPACE,MINIMA
         if return_lp:
-            from lmaao.test_functions.pilotnet.process import PilotNetProcess
+            from lmao.test_functions.pilotnet.process import PilotNetProcess
             return PilotNetProcess, SEARCH_SPACE, MINIMA
         else:
             raise Exception("Pilotnet is only available as process for hyperparameter optimization")
     elif function_name == "nmnist":
-        from lmaao.test_functions.nmnist.nmnist import SEARCH_SPACE,MINIMA
+        from lmao.test_functions.nmnist.nmnist import SEARCH_SPACE,MINIMA
         if return_lp:
-            from lmaao.test_functions.nmnist.process import NmnistProcess
+            from lmao.test_functions.nmnist.process import NmnistProcess
             return NmnistProcess, SEARCH_SPACE, MINIMA
         else:
             raise Exception("Nmnist is only available as process for hyperparameter optimization")
@@ -113,7 +112,7 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
     """
 
     if optimizer_class == "gp-cpu":
-        from lmaao.optimizers.gpr import GPROptimizerProcess
+        from lmao.optimizers.gpr import GPROptimizerProcess
         return GPROptimizerProcess(optimizer_config, search_space)
     else:
         raise ValueError(f"Optimizer {optimizer_class} not found")

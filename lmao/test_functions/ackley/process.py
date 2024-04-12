@@ -9,7 +9,7 @@ from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 
 import numpy as np
 
-from lmaao.test_functions.base.process import BaseFunctionProcess
+from lmao.test_functions.base.process import BaseFunctionProcess
 
 
 class AckleyProcess(BaseFunctionProcess):

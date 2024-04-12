@@ -19,7 +19,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import lava.lib.dl.slayer as slayer
 
 
-from lmaao.test_functions.base.process import BaseFunctionProcess
+from lmao.test_functions.base.process import BaseFunctionProcess
 
 
 class PilotNetwork(torch.nn.Module):
