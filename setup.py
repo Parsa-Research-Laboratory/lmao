@@ -5,6 +5,7 @@ if __name__ == "__main__":
         name="lmaao",
         version="0.0.1",
         install_requires=[
+            "h5py",
             "ipykernel",
             "matplotlib",
             "numpy",

@@ -9,7 +9,7 @@ from lmaao.factory import (
 )
 from lmaao.solver import BOSolver
 
-DESCRIPTION = "Hyperdimensional Bayesian Optimization in Lava"
+DESCRIPTION = "Lava Multi-Agent Asynchronous Optimization (LMAAO)"
 
 
 def get_config() -> DictConfig:
@@ -25,7 +25,7 @@ def get_config() -> DictConfig:
         "--function",
         type=str,
         choices=VALID_FUNCTIONS,
-        default="nmnist",
+        default="ackley",
         help="The function to optimize",
     )
     parser.add_argument(
@@ -97,14 +97,14 @@ def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
     print(DESCRIPTION)
     print(delimiter * delimiter_width)
     print(f"Configuration:")
-    print(f" - Black Box Function: {config.function}")
+    print(f" - Black Box Function:  {config.function}")
     print(f" - Return Lava Process: {config.return_lp}")
-    print(f" - Max Iterations: {config.max_iterations}")
-    print(f" - Number of Initial Points: {config.num_initial_points}")
+    print(f" - Max Iterations:      {config.max_iterations}")
+    print(f" - Number of IPs:       {config.num_initial_points}")
     print(f" - Number of Processes: {config.num_processes}")
-    print(f" - Number of Repeats: {config.num_repeats}")
-    print(f" - Optimizer Class: {config.optimizer_class}")
-    print(f" - Random Seed: {config.seed}")
+    print(f" - Number of Repeats:   {config.num_repeats}")
+    print(f" - Optimizer Class:     {config.optimizer_class}")
+    print(f" - Random Seed:         {config.seed}")
     print(delimiter * delimiter_width)
 
 

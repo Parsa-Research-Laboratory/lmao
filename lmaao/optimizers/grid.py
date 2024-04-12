@@ -16,69 +16,56 @@ import time
 from lmaao.optimizers.base import BaseOptimizerProcess
 
 
-class GPROptimizerProcess(BaseOptimizerProcess):
+class GridOptimizerProcess(BaseOptimizerProcess):
     """
-    A class representing the process of optimizing using Gaussian Process
-    Regression (GPR) for optimizing black-box functions.
+    A class representing the process using grid search for optimizing
+    black-box functions.
 
     This class extends the BaseOptimizerProcess class and provides additional
-    functionality specific to GPR optimization.
+    functionality specific to the grid search implementation.
 
     Attributes:
-        max_iterations (Var): The maximum number of iterations for the
-            optimization process.
-        num_initial_points (Var): The number of initial points to sample for
-            the optimization process.
-        seed (Var): The seed value for random number generation.
-        finished (Var): A variable indicating whether the optimization process
-            has finished.
-        time_step (Var): The current time step of the optimization process.
-        x_log (Var): A log of the input values used during the optimization
-            process.
-        y_log (Var): A log of the output values obtained during the
-            optimization process.
-        time_log (Var): A log of the time steps during the optimization
-            process.
+        TODO Finish Documentation
 
     Args:
         config (DictConfig): The configuration for the optimization process.
         search_space (Space): The search space for the optimization process.
-        **kwargs: Additional keyword arguments to be passed to the
+        **kwargs: Additional keyword arguments to be based to the
             BaseOptimizerProcess constructor.
     """
-
     def __init__(self, config: DictConfig, search_space: Space, **kwargs):
         """
-        Initialize a GPROptimizerProcess object.
+        Initialize a GridOptimizer Process
 
         Args:
             config (DictConfig): The configuration for the optimization process.
             search_space (Space): The search space for the optimization process.
             **kwargs: Additional keyword arguments to be passed to the
-                BaseOptimizerProcess constructor.
+                BaseOptimizer constructor
         """
 
-        assert isinstance(config, DictConfig), "config must be a DictConfig object"
-        assert isinstance(search_space, Space), "search_space must be a Space object"
-
+        assert isinstance(config, DictConfig), \
+            f"config must be a DictConfig object; got {type(config)}"
+        assert isinstance(search_space, Space), \
+            f"search_space must be a Space object; got {type(search_space)}"
+        
         super().__init__(num_params=search_space.n_dims,
                          num_processes=config.get("num_processes", 1),
                          num_repeats=config.get("num_repeats", 1),
-                         num_outputs=config.get("num_outputs", 1),
+                         num_outputs=config.get("num_outputs", 1)
                          **kwargs)
-
-        # ------------------------
+        
+        # -------------------------
         # Configuration Parameters
-        # ------------------------
+        # -------------------------
         self.max_iterations = Var(
             shape=(1,),
-            init=config.max_iterations
+            init=0
         )
-        self.num_initial_points = Var(
+        self.seed = Var(
             shape=(1,),
-            init=config.num_initial_points
+            init=config.seed
         )
-        self.seed = Var(shape=(1,), init=config.seed)
 
         # ------------------------
         # Internal State Variables
@@ -138,14 +125,14 @@ class GPROptimizerProcess(BaseOptimizerProcess):
             init=local_search_space
         )
 
-@implements(proc=GPROptimizerProcess, protocol=AsyncProtocol)
+@implements(proc=GridOptimizerProcess, protocol=AsyncProtocol)
 @requires(CPU)
-@tag('floating_pt')
-class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
+@tag("floating_pt")
+class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
     """
-    A class representing a PyAsyncGPROptimizerModel.
+    A class representing a PyAsyncGridOptimizerModel.
 
-    This class is responsible for optimizing a function using Gaussian Process
+    The class is responsible for optimizing a function using Gaussian Process
     Regression (GPR). It inherits from the PyAsyncProcessModel class.
 
     Attributes:
@@ -157,14 +144,12 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
             process.
         max_iterations (int): The maximum number of iterations for the
             optimization process.
-        num_initial_points (int): The number of initial points to sample.
-        seed (int): The seed for random number generation.
-        finished (int): Flag indicating whether the optimization process has
-            finished.
+        seed (int): The seed for the random number generation.
+        finished (int): Flag indicating whether the optimization process
+            has finished.
         time_step (int): The current time step of the optimization process.
-        x_log (np.ndarray): Log of input data.
-        y_log (np.ndarray): Log of output data.
-        time_log (np.ndarray): Log of time taken for each iteration.
+        x_log (np.ndarray): Log of the evaluated parameters
+        y_log (np.ndarray): The 'quality' of each parameter combination
     """
 
     # ----------------------------------
@@ -206,7 +191,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
     x_log = LavaPyType(np.ndarray, np.float32)
     y_log = LavaPyType(np.ndarray, np.float32)
     y_log_min = LavaPyType(np.ndarray, np.float32)
-    time_log = LavaPyType(np.ndarray, np.float32)       
+    time_log = LavaPyType(np.ndarray, np.float32)
 
     def run_async(self):
         """
@@ -214,86 +199,15 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
 
         This method continuously runs the optimization process until a pause or
         stop command is received. It sends an initial point to prime the system
-        and then iteratively receives new data, updates the optimizer, and
+        and then iteratively received new data, updates the optimizer, and
         sends new points to evaluate.
         """
+
         while True:
-            if self.check_for_pause_cmd():
+            if self.check_for_pause_cmd() or self.check_for_stop_cmd():
                 return
             
-            if self.check_for_stop_cmd():
-                print("Stopped")
-                return
-            
-            
-            # Send initial point to prime the system
             if self.time_step == -1:
                 decoded_search_space = []
                 for i in range(self.search_space.shape[0]):
-                    dim = self.search_space[i]
-                    if dim[2] == 0.0:
-                        decoded_search_space.append(Real(dim[0], dim[1]))
-                    elif dim[2] == 1.0:
-                        decoded_search_space.append(Integer(dim[0], dim[1]))
-                    else:
-                        raise ValueError(f"Unsupported dimension type: {dim[0]}")
-
-                self.acquisition_function: str = "gp_hedge"
-                self.acquisition_optimizer: str = "auto"
-                self.asking_strategy: str = "cl_min"
-                self.base_estimator: str = "GP"
-                self.initial_point_estimator: str = "random"
-                
-                self.optimizer = Optimizer(
-                    dimensions=decoded_search_space,
-                    acq_func=self.acquisition_function,
-                    acq_optimizer=self.acquisition_optimizer,
-                    base_estimator=self.base_estimator,
-                    initial_point_generator=self.initial_point_estimator,
-                    n_initial_points=self.num_initial_points,
-                    random_state=self.seed
-                )
-
-                # send an initial point to each of the process
-                output_data: list = self.optimizer.ask(
-                    n_points=self.num_processes,
-                    strategy=self.asking_strategy
-                )
-                for i in range(self.num_processes):
-                    output_port: PyOutPort = eval(f"self.output_port_{i}")
-                    output_data: np.ndarray = np.array(output_data[i])                
-                    output_port.send(output_data)
-
-                # Iterate to 0 to get out of the initialization and process
-                # priming state
-                self.time_step += 1
-
-            if self.time_step < self.max_iterations:
-                
-                input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
-                output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
-                self.process_ticker = (self.process_ticker + 1) % self.num_processes
-                if input_port.probe():
-                    # print(f"LMAAO: {self.time_step}/{self.max_iterations}\r")
-                    start_time: float = time.time()
-                    new_data: np.ndarray = input_port.recv()
-
-                    self.x_log[self.time_step, :] = new_data[:self.num_params]
-                    self.y_log[self.time_step, :] = new_data[self.num_params:]
-    
-                    x = new_data[:self.num_params].tolist()
-                    y = new_data[self.num_params:].item()
-
-                    self.optimizer.tell(x, y)
-
-                    output_data: list = self.optimizer.ask(
-                        strategy=self.asking_strategy
-                    )
-
-                    output_data: np.ndarray = np.array(output_data)
-                    output_port.send(output_data)
-
-                    self.time_log[self.time_step] = time.time() - start_time
-                    self.time_step += 1
-            else:
-                self.finished = 1
+                    
