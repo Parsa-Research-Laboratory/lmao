@@ -88,14 +88,13 @@ class PyAckleyProcessModel(PyLoihiProcessModel):
             output_packet = np.zeros((self.num_outputs + self.num_params), dtype=np.float32)
             output_packet[:self.num_params] = input_data
 
-            x0 = input_data[0]
-            x1 = input_data[1]
+            x = input_data[0]
+            y = input_data[1]
 
-            y = -self.a * np.exp(-self.b * np.sqrt(0.5 * (x0**2 + x1**2))) \
-                - np.exp(0.5 * (np.cos(self.c * x0) + np.cos(self.c * x1))) \
-                + self.a + np.exp(1)
+            out = -self.a * np.exp(-self.b * np.sqrt(0.5 * (x**2 + y**2))) - np.exp(0.5 \
+        * (np.cos(self.c * x) + np.cos(self.c * y))) + self.a + np.exp(1)
 
-            output_packet[self.num_params:] = y
+            output_packet[self.num_params:] = out
 
             self.output_port.send(output_packet)
         else:

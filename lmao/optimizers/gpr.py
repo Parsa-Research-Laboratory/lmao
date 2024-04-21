@@ -119,7 +119,7 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         # ------------------
         # Search Space
         # ------------------
-        search_space_shape: tuple = (search_space.n_dims,3)
+        search_space_shape: tuple = (search_space.n_dims,4)
         local_search_space: np.ndarray = np.zeros(search_space_shape, dtype=np.float32)
 
         for i, dim in enumerate(search_space.dimensions):
@@ -240,7 +240,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
 
                 self.acquisition_function: str = "gp_hedge"
                 self.acquisition_optimizer: str = "auto"
-                self.asking_strategy: str = "cl_min"
+                self.asking_strategy: str = "cl_max"
                 self.base_estimator: str = "GP"
                 self.initial_point_estimator: str = "random"
                 
@@ -255,13 +255,14 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 )
 
                 # send an initial point to each of the process
-                output_data: list = self.optimizer.ask(
+                output_data_list: list = self.optimizer.ask(
                     n_points=self.num_processes,
                     strategy=self.asking_strategy
                 )
+                # output_data_list = [output_data_list]
                 for i in range(self.num_processes):
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
-                    output_data: np.ndarray = np.array(output_data[i])                
+                    output_data: np.ndarray = np.array(output_data_list[i])                
                     output_port.send(output_data)
 
                 # Iterate to 0 to get out of the initialization and process
@@ -280,6 +281,10 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
 
                     self.x_log[self.time_step, :] = new_data[:self.num_params]
                     self.y_log[self.time_step, :] = new_data[self.num_params:]
+                
+                    self.y_log_min[self.time_step, :] = np.min(self.y_log[:self.time_step+1], axis=0)
+                    print(new_data)
+                    # print(np.min(self.y_log[:self.time_step+1], axis=0))
     
                     x = new_data[:self.num_params].tolist()
                     y = new_data[self.num_params:].item()

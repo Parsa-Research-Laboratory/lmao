@@ -158,6 +158,7 @@ class BOSolver:
                 if self.optimizer.finished.get():
                     x_log = self.optimizer.x_log.get()
                     y_log = self.optimizer.y_log.get()
+                    y_log_min = self.optimizer.y_log_min.get()
                     finished = True
 
         except KeyboardInterrupt:
@@ -169,7 +170,8 @@ class BOSolver:
 
         results = {
             "x_log": x_log,
-            "y_log": y_log
+            "y_log": y_log,
+            "y_log_min": y_log_min
         }
 
         return results

@@ -106,13 +106,14 @@ class GridOptimizerProcess(BaseOptimizerProcess):
         # ------------------
         # Search Space
         # ------------------
-        search_space_shape: tuple = (search_space.n_dims,3)
+        search_space_shape: tuple = (search_space.n_dims,4)
         local_search_space: np.ndarray = np.zeros(search_space_shape, dtype=np.float32)
 
         for i, dim in enumerate(search_space.dimensions):
             if isinstance(dim, Real):
                 local_search_space[i, 0] = dim.low
                 local_search_space[i, 1] = dim.high
+                local_search_space[i, 3] = config.get(f"dim_{i}_precision", 0.1)
             elif isinstance(dim, Integer):
                 local_search_space[i, 0] = dim.low
                 local_search_space[i, 1] = dim.high
@@ -210,5 +211,18 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
             if self.time_step == -1:
                 decoded_search_space = []
                 for i in range(self.search_space.shape[0]):
-                    pass
+                    dim = self.search_space[i]
+                    if dim[2] == 0.0:
+                        decoded_search_space.append(Real(dim[0], dim[1]))
+                    elif dim[2] == 1.0:
+                        decoded_search_space.append(Integer(dim[0], dim[1]))
+                    else:
+                        raise ValueError(f"Unsupported dimension type: {dim[0]}")
+                    
+                    
+                    
+                
+                    
+
+
                     
