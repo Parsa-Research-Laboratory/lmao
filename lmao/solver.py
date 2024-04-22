@@ -148,25 +148,19 @@ class BOSolver:
 
         finished: bool = False
 
-        try:
-            while not finished:
-                self.optimizer.run(RunContinuous(), Loihi2SimCfg())
-                time.sleep(1)
+        while not finished:
+            self.optimizer.run(RunContinuous(), Loihi2SimCfg())
+            time.sleep(1)
 
-                self.optimizer.pause()
+            self.optimizer.pause()
 
-                if self.optimizer.finished.get():
-                    x_log = self.optimizer.x_log.get()
-                    y_log = self.optimizer.y_log.get()
-                    y_log_min = self.optimizer.y_log_min.get()
-                    finished = True
+            if self.optimizer.finished.get():
+                x_log = self.optimizer.x_log.get()
+                y_log = self.optimizer.y_log.get()
+                y_log_min = self.optimizer.y_log_min.get()
+                finished = True
 
-        except KeyboardInterrupt:
-            print("Received KBD Interrupt. Stopping Solver")
-            self.optimizer.stop()
-            sys.exit()
-        finally:
-            self.optimizer.stop()
+        self.optimizer.stop()
 
         results = {
             "x_log": x_log,
