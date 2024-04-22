@@ -1,6 +1,7 @@
 from lava.magma.core.run_configs import Loihi2SimCfg
 from lava.magma.core.run_conditions import RunContinuous
 
+from copy import deepcopy
 import os
 from omegaconf import DictConfig
 from skopt.space import Space
@@ -80,6 +81,7 @@ class BOSolver:
         Returns:
             None
         """
+        config = deepcopy(config)
         validate_config(config)
 
         self.max_iter: int = config.max_iterations

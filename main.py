@@ -1,5 +1,6 @@
 import argparse
 from omegaconf import DictConfig
+import time
 
 from lmao.factory import (
     config_factory,
@@ -43,13 +44,13 @@ def get_config() -> DictConfig:
     parser.add_argument(
         "--num_initial_points",
         type=int,
-        default=25,
+        default=10,
         help="The number of initial points to use for optimizer initialization",
     )
     parser.add_argument(
         "--num_processes",
         type=int,
-        default=1,
+        default=3,
         help="The number of processes to use for optimization",
     )
     parser.add_argument(
@@ -68,7 +69,7 @@ def get_config() -> DictConfig:
     parser.add_argument(
         "--seed",
         type=int,
-        default=0,
+        default=7,
         help="The random seed to use for the optimization process",
     )
 
@@ -125,13 +126,20 @@ def main(config: DictConfig):
     config.optimizer = config_factory(config)
     function_process, search_space, minima = function_factory(config.function, return_lp=config.return_lp)
     solver = BOSolver(config)
+
+    solve_start = time.time()
+
     solver.solve(
         ufunc=function_process,
         use_lp=config.return_lp,
         search_space=search_space
     )
 
+    solve_end = time.time()
+    total_time = solve_end - solve_start
+    print(f"Total Time: {total_time}")
 
 if __name__ == "__main__":
-    config = get_config()
-    main(config)
+    config_base = get_config()
+    config_base.num_processes = 1
+    main(config_base)
