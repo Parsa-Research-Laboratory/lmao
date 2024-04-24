@@ -255,15 +255,17 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 )
 
                 # send an initial point to each of the process
-                output_data_list: list = self.optimizer.ask(
+                self.unknown_point_cache: list = self.optimizer.ask(
                     n_points=self.num_processes,
                     strategy=self.asking_strategy
                 )
                 # output_data_list = [output_data_list]
                 for i in range(self.num_processes):
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
-                    output_data: np.ndarray = np.array(output_data_list[i])                
+                    next_point = self.unknown_point_cache[-1]
+                    output_data: np.ndarray = np.array(next_point)                
                     output_port.send(output_data)
+                    del self.unknown_point_cache[-1]
 
                 # Iterate to 0 to get out of the initialization and process
                 # priming state
@@ -291,12 +293,15 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
 
                     self.optimizer.tell(x, y)
 
-                    output_data: list = self.optimizer.ask(
-                        strategy=self.asking_strategy
-                    )
+                    if len(self.unknown_point_cache) == 0:
+                        self.unknown_point_cache = self.optimizer.ask(
+                            n_points=self.num_processes,
+                            strategy=self.asking_strategy
+                        )
 
-                    output_data: np.ndarray = np.array(output_data)
+                    output_data: np.ndarray = np.array(self.unknown_point_cache[-1])
                     output_port.send(output_data)
+                    del self.unknown_point_cache[-1]
 
                     self.time_log[self.time_step] = time.time() - start_time
                     self.time_step += 1
