@@ -11,8 +11,9 @@ VALID_FUNCTIONS = [
 ]
 
 VALID_SOLVERS = [
+    "gp-cpu",
+    "random-cpu",
     "vsa-cpu",
-    "gp-cpu"
 ]
 
 def validate_return(function_process, search_space, minima):
@@ -114,6 +115,9 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
     if optimizer_class == "gp-cpu":
         from lmao.optimizers.gpr import GPROptimizerProcess
         return GPROptimizerProcess(optimizer_config, search_space)
+    elif optimizer_class == "random-cpu":
+        from lmao.optimizers.random import RandomOptimizerProcess
+        return RandomOptimizerProcess(optimizer_config, search_space)
     else:
         raise ValueError(f"Optimizer {optimizer_class} not found")
 
@@ -138,6 +142,9 @@ def config_factory(config: DictConfig) -> DictConfig:
     if config.optimizer_class == "gp-cpu":
         from .optimizers.configs import GPR_BASE_CONFIG
         config.optimizer = GPR_BASE_CONFIG
+    elif config.optimizer_class == "random-cpu":
+        from .optimizers.configs import RANDOM_BASE_CONFIG
+        config.optimizer = RANDOM_BASE_CONFIG
     else:
         raise ValueError(f"Invalid optimizer class: {config.optimizer_class}")
     
