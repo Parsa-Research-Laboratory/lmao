@@ -8,6 +8,7 @@ from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 import numpy as np
 from skopt.space import Space
 from typing import Callable
+import time
 
 from lmao.test_functions.base.process import BaseFunctionProcess, validate_base_args
 
@@ -79,6 +80,8 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
         """
         if self.input_port.probe():
             input_data = self.input_port.recv()
+
+            time.sleep(0.5)
 
             y = self.user_function(*input_data).astype(np.float32)
 

@@ -1,5 +1,8 @@
 import argparse
+import copy
+import numpy as np
 from omegaconf import DictConfig
+import pickle as pkl
 import time
 
 from lmao.factory import (
@@ -50,7 +53,7 @@ def get_config() -> DictConfig:
     parser.add_argument(
         "--num_processes",
         type=int,
-        default=3,
+        default=1,
         help="The number of processes to use for optimization",
     )
     parser.add_argument(
@@ -71,6 +74,12 @@ def get_config() -> DictConfig:
         type=int,
         default=7,
         help="The random seed to use for the optimization process",
+    )
+    parser.add_argument(
+        "--run-idx",
+        type=int,
+        default=0,
+        help="The index of the run",
     )
 
     args = parser.parse_args()
@@ -106,6 +115,7 @@ def print_intro(config: DictConfig, delimiter="-", delimiter_width=60):
     print(f" - Number of Repeats:   {config.num_repeats}")
     print(f" - Optimizer Class:     {config.optimizer_class}")
     print(f" - Random Seed:         {config.seed}")
+    print(f" - Run Index:           {config.run_idx}")
     print(delimiter * delimiter_width)
 
 
@@ -129,17 +139,50 @@ def main(config: DictConfig):
 
     solve_start = time.time()
 
-    solver.solve(
+    results = solver.solve(
         ufunc=function_process,
         use_lp=config.return_lp,
         search_space=search_space
     )
 
+    # print(results)
+
     solve_end = time.time()
     total_time = solve_end - solve_start
     print(f"Total Time: {total_time}")
+    return total_time, results
 
 if __name__ == "__main__":
+    time_log = []
+    log: dict = {
+        "time_log": [],
+        "results_log": []
+    }
+    num_runs = 5
+
     config_base = get_config()
-    config_base.num_processes = 1
-    main(config_base)
+    config_base.num_processes = config_base.run_idx
+
+    print(config_base.num_processes)
+    for i in range(num_runs):
+        config = copy.deepcopy(config_base)
+        config.seed = i
+        times, results = main(config)
+
+        log["time_log"].append(times)
+        log["results_log"].append(results)
+
+    print(f"Number of Runs: {num_runs}")
+    print(f"Average Time: {np.mean(time_log)}")
+    print(f"Standard Deviation: {np.std(time_log)}")
+    print(f"Time Log: {time_log}")
+
+    log_path = f"tmp-d05/{config_base.function}_run{config_base.run_idx}.pkl"
+
+    print(log_path)
+
+    with open(log_path, "wb") as f:
+        pkl.dump(log, f)
+
+
+

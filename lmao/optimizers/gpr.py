@@ -10,7 +10,7 @@ import numpy as np
 from omegaconf import DictConfig
 import os
 from skopt import Optimizer
-from skopt.space import Space, Real, Integer
+from skopt.space import Space, Real, Integer, Categorical
 import time
 
 from lmao.optimizers.base import BaseOptimizerProcess
@@ -121,15 +121,22 @@ class GPROptimizerProcess(BaseOptimizerProcess):
         # ------------------
         search_space_shape: tuple = (search_space.n_dims,4)
         local_search_space: np.ndarray = np.zeros(search_space_shape, dtype=np.float32)
+        global global_search_space_values
+        global_search_space_values = []
 
         for i, dim in enumerate(search_space.dimensions):
             if isinstance(dim, Real):
                 local_search_space[i, 0] = dim.low
                 local_search_space[i, 1] = dim.high
+                global_search_space_values.append([])
             elif isinstance(dim, Integer):
                 local_search_space[i, 0] = dim.low
                 local_search_space[i, 1] = dim.high
                 local_search_space[i, 2] = 1.0
+                global_search_space_values.append([])
+            elif isinstance(dim, Categorical):
+                local_search_space[i, 2] = 2.0
+                global_search_space_values.append(dim.categories)
             else:
                 raise ValueError(f"Unsupported dimension type: {type(dim)}")
             
@@ -235,6 +242,8 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                         decoded_search_space.append(Real(dim[0], dim[1]))
                     elif dim[2] == 1.0:
                         decoded_search_space.append(Integer(dim[0], dim[1]))
+                    elif dim[2] == 2.0:
+                        decoded_search_space.append(Integer(0, len(global_search_space_values[i]) - 1))
                     else:
                         raise ValueError(f"Unsupported dimension type: {dim[0]}")
 
@@ -263,6 +272,11 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                 for i in range(self.num_processes):
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
                     next_point = self.unknown_point_cache[-1]
+
+                    for idx in range(len(next_point)):
+                        if self.search_space[idx][2] == 2.0:
+                            next_point[idx] = global_search_space_values[idx][next_point[idx]]
+
                     output_data: np.ndarray = np.array(next_point)                
                     output_port.send(output_data)
                     del self.unknown_point_cache[-1]
@@ -281,12 +295,20 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     start_time: float = time.time()
                     new_data: np.ndarray = input_port.recv()
 
-                    self.x_log[self.time_step, :] = new_data[:self.num_params]
-                    self.y_log[self.time_step, :] = new_data[self.num_params:]
-                
+                    x = new_data[:self.num_params]
+                    y = new_data[self.num_params:]
+
+                    self.x_log[self.time_step, :] = x
+                    self.y_log[self.time_step, :] = y
                     self.y_log_min[self.time_step, :] = np.min(self.y_log[:self.time_step+1], axis=0)
-                    print(new_data)
-                    # print(np.min(self.y_log[:self.time_step+1], axis=0))
+
+                    for idx in range(x.shape[0]):
+                        if self.search_space[idx][2] == 2.0:
+                            if isinstance(new_data[idx], np.float32):
+                                closest_idx = np.argmin(np.abs(np.array(global_search_space_values[idx]) - new_data[idx]))
+                                new_data[idx] = closest_idx
+                            else:
+                                new_data[idx] = global_search_space_values[idx].index(new_data[idx])
     
                     x = new_data[:self.num_params].tolist()
                     y = new_data[self.num_params:].item()
@@ -300,6 +322,11 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                         )
 
                     output_data: np.ndarray = np.array(self.unknown_point_cache[-1])
+
+                    for idx in range(len(output_data)):
+                        if self.search_space[idx][2] == 2.0:
+                            output_data[idx] = global_search_space_values[idx][int(output_data[idx])]
+
                     output_port.send(output_data)
                     del self.unknown_point_cache[-1]
 
