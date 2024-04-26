@@ -81,7 +81,7 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
         if self.input_port.probe():
             input_data = self.input_port.recv()
 
-            time.sleep(0.5)
+            time.sleep(10.0)
 
             y = self.user_function(*input_data).astype(np.float32)
 

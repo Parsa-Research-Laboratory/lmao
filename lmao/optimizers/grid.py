@@ -6,11 +6,12 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.process.variable import Var
 from lava.magma.core.sync.protocols.async_protocol import AsyncProtocol
 
+import itertools
 import numpy as np
 from omegaconf import DictConfig
 import os
 from skopt import Optimizer
-from skopt.space import Space, Real, Integer
+from skopt.space import Space, Integer, Categorical
 import time
 
 from lmao.optimizers.base import BaseOptimizerProcess
@@ -48,20 +49,21 @@ class GridOptimizerProcess(BaseOptimizerProcess):
             f"config must be a DictConfig object; got {type(config)}"
         assert isinstance(search_space, Space), \
             f"search_space must be a Space object; got {type(search_space)}"
-        
+
         super().__init__(num_params=search_space.n_dims,
                          num_processes=config.get("num_processes", 1),
                          num_repeats=config.get("num_repeats", 1),
-                         num_outputs=config.get("num_outputs", 1)
+                         num_outputs=config.get("num_outputs", 1),
                          **kwargs)
-        
+
         # -------------------------
         # Configuration Parameters
         # -------------------------
         self.max_iterations = Var(
             shape=(1,),
-            init=0
+            init=250
         )
+
         self.seed = Var(
             shape=(1,),
             init=config.seed
@@ -108,16 +110,18 @@ class GridOptimizerProcess(BaseOptimizerProcess):
         # ------------------
         search_space_shape: tuple = (search_space.n_dims,4)
         local_search_space: np.ndarray = np.zeros(search_space_shape, dtype=np.float32)
+        global global_search_space_values
+        global_search_space_values = []
 
         for i, dim in enumerate(search_space.dimensions):
-            if isinstance(dim, Real):
-                local_search_space[i, 0] = dim.low
-                local_search_space[i, 1] = dim.high
-                local_search_space[i, 3] = config.get(f"dim_{i}_precision", 0.1)
-            elif isinstance(dim, Integer):
+            if isinstance(dim, Integer):
                 local_search_space[i, 0] = dim.low
                 local_search_space[i, 1] = dim.high
                 local_search_space[i, 2] = 1.0
+                global_search_space_values.append([])
+            elif isinstance(dim, Categorical):
+                local_search_space[i, 2] = 2.0
+                global_search_space_values.append(dim.categories)
             else:
                 raise ValueError(f"Unsupported dimension type: {type(dim)}")
             
@@ -175,7 +179,6 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
     # Configuration Parameters
     # ------------------------
     max_iterations = LavaPyType(int, int)
-    num_initial_points = LavaPyType(int, int)
     seed = LavaPyType(int, int)
     search_space = LavaPyType(np.ndarray, object)
 
@@ -212,12 +215,77 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
                 decoded_search_space = []
                 for i in range(self.search_space.shape[0]):
                     dim = self.search_space[i]
-                    if dim[2] == 0.0:
-                        decoded_search_space.append(Real(dim[0], dim[1]))
-                    elif dim[2] == 1.0:
-                        decoded_search_space.append(Integer(dim[0], dim[1]))
+                    if dim[2] == 1.0:
+                        low_bound = int(dim[0])
+                        high_bound = int(dim[1])
+                        range_values = list(range(low_bound, high_bound + 1))
+                        decoded_search_space.append(range_values)
+                    elif dim[2] == 2.0:
+                        low_bound = int(0.0)
+                        high_bound = len(global_search_space_values[i])
+                        range_values = list(range(low_bound, high_bound))
+                        decoded_search_space.append(range_values)
                     else:
                         raise ValueError(f"Unsupported dimension type: {dim[0]}")
+                    
+                self.grid_points = list(itertools.product(*decoded_search_space))
+                    
+                # send an initial point to each of the process
+                self.unknown_point_cache: list = None # TODO
+                # output_data_list = [output_data_list]
+                for i in range(self.num_processes):
+                    if len(self.grid_points) > 0:
+                        output_port: PyOutPort = eval(f"self.output_port_{i}")
+                        next_point: tuple = self.grid_points[-1]
+                        next_point = list(next_point)
+                        next_point = np.array(next_point)
+
+                        for idx in range(len(next_point)):
+                            if self.search_space[idx][2] == 2.0:
+                                next_point[idx] = global_search_space_values[idx][next_point[idx]]
+
+                        output_data: np.ndarray = np.array(next_point)                
+                        output_port.send(output_data)
+                        del self.grid_points[-1]
+
+                # Iterate to 0 to get out of the initialization and process
+                # priming state
+                self.time_step += 1
+
+            if self.time_step < self.max_iterations:
+                
+                input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
+                output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
+                self.process_ticker = (self.process_ticker + 1) % self.num_processes
+                if input_port.probe():
+                    start_time: float = time.time()
+                    new_data: np.ndarray = input_port.recv()
+
+                    print("new data: ", new_data)
+
+                    x = new_data[:self.num_params]
+                    y = new_data[self.num_params:]
+
+                    self.x_log[self.time_step, :] = x
+                    self.y_log[self.time_step, :] = y
+                    self.y_log_min[self.time_step, :] = np.min(self.y_log[:self.time_step+1], axis=0)
+                    self.time_step += 1
+
+
+                    if len(self.grid_points) > 0:
+                        next_point: tuple = self.grid_points[-1]
+                        output_data: np.ndarray = np.array(next_point)
+
+                        for idx in range(len(output_data)):
+                            if self.search_space[idx][2] == 2.0:
+                                output_data[idx] = global_search_space_values[idx][int(output_data[idx])]
+
+                        output_port.send(output_data)
+                        del self.grid_points[-1]
+
+                    self.time_log[self.time_step] = time.time() - start_time                    
+            else:
+                self.finished = 1
                     
                 
                     

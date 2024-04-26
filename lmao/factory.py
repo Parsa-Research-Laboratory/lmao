@@ -12,6 +12,7 @@ VALID_FUNCTIONS = [
 
 VALID_SOLVERS = [
     "gp-cpu",
+    "grid-cpu",
     "random-cpu",
     "vsa-cpu",
 ]
@@ -115,6 +116,9 @@ def optimizer_factory(optimizer_class: str, optimizer_config: DictConfig,
     if optimizer_class == "gp-cpu":
         from lmao.optimizers.gpr import GPROptimizerProcess
         return GPROptimizerProcess(optimizer_config, search_space)
+    elif optimizer_class == "grid-cpu":
+        from lmao.optimizers.grid import GridOptimizerProcess
+        return GridOptimizerProcess(optimizer_config, search_space)
     elif optimizer_class == "random-cpu":
         from lmao.optimizers.random import RandomOptimizerProcess
         return RandomOptimizerProcess(optimizer_config, search_space)
