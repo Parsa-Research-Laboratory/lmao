@@ -10,7 +10,7 @@ import numpy as np
 from omegaconf import DictConfig
 import os
 from skopt import Optimizer
-from skopt.space import Space, Real, Integer
+from skopt.space import Space, Real, Integer, Categorical
 import time
 
 from lmao.optimizers.base import BaseOptimizerProcess
@@ -115,15 +115,22 @@ class RandomOptimizerProcess(BaseOptimizerProcess):
         # ------------------
         search_space_shape: tuple = (search_space.n_dims,4)
         local_search_space: np.ndarray = np.zeros(search_space_shape, dtype=np.float32)
+        global global_search_space_values
+        global_search_space_values = []
 
         for i, dim in enumerate(search_space.dimensions):
             if isinstance(dim, Real):
                 local_search_space[i, 0] = dim.low
                 local_search_space[i, 1] = dim.high
+                global_search_space_values.append([])
             elif isinstance(dim, Integer):
                 local_search_space[i, 0] = dim.low
                 local_search_space[i, 1] = dim.high
                 local_search_space[i, 2] = 1.0
+                global_search_space_values.append([])
+            elif isinstance(dim, Categorical):
+                local_search_space[i, 2] = 2.0
+                global_search_space_values.append(dim.categories)
             else:
                 raise ValueError(f"Unsupported dimension type: {type(dim)}")
             
@@ -227,16 +234,23 @@ class PyAsyncRandomOptimizerModel(PyAsyncProcessModel):
                         decoded_search_space.append(Real(dim[0], dim[1]))
                     elif dim[2] == 1.0:
                         decoded_search_space.append(Integer(dim[0], dim[1]))
+                    elif dim[2] == 2.0:
+                        decoded_search_space.append(Integer(0, len(global_search_space_values[i]) - 1))
                     else:
                         raise ValueError(f"Unsupported dimension type: {dim[0]}")
-                self.search_space = Space(decoded_search_space)
+                self.search_space_skopt = Space(decoded_search_space)
 
 
                 self.random_state = np.random.RandomState(self.seed)
-                for _ in range(self.num_processes):
+                for i in range(self.num_processes):
                     output_port: PyOutPort = eval(f"self.output_port_{i}")
-                    next_point = self.search_space.rvs(random_state=self.random_state)
+                    next_point = self.search_space_skopt.rvs(random_state=self.random_state)
                     next_point = next_point[0]
+
+                    for idx in range(len(next_point)):
+                        if self.search_space[idx][2] == 2.0:
+                            next_point[idx] = global_search_space_values[idx][next_point[idx]]
+
                     output_data: np.ndarray = np.array(next_point)              
                     output_port.send(output_data)
 
@@ -245,10 +259,10 @@ class PyAsyncRandomOptimizerModel(PyAsyncProcessModel):
                 self.time_step += 1
 
             if self.time_step < self.max_iterations:
-                
                 input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
                 output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
                 self.process_ticker = (self.process_ticker + 1) % self.num_processes
+
                 if input_port.probe():
                     # print(f"LMAO: {self.time_step}/{self.max_iterations}\r")
                     start_time: float = time.time()
@@ -261,9 +275,14 @@ class PyAsyncRandomOptimizerModel(PyAsyncProcessModel):
                 
                     self.y_log_min[self.time_step, :] = np.min(self.y_log[:self.time_step+1], axis=0)
     
-                    next_point = self.search_space.rvs(random_state=self.random_state)
+                    next_point = self.search_space_skopt.rvs(random_state=self.random_state)
                     next_point = next_point[0]
-                    output_data: np.ndarray = np.array(next_point)
+
+                    for idx in range(len(next_point)):
+                        if self.search_space[idx][2] == 2.0:
+                            next_point[idx] = global_search_space_values[idx][next_point[idx]]
+
+                    output_data: np.ndarray = np.array(next_point)              
                     output_port.send(output_data)
 
                     self.time_log[self.time_step] = time.time() - start_time
