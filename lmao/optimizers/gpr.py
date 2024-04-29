@@ -265,7 +265,7 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
 
                 # send an initial point to each of the process
                 self.unknown_point_cache: list = self.optimizer.ask(
-                    n_points=self.num_processes,
+                    n_points=self.num_initial_points,
                     strategy=self.asking_strategy
                 )
                 # output_data_list = [output_data_list]
@@ -280,19 +280,22 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     output_data: np.ndarray = np.array(next_point)                
                     output_port.send(output_data)
                     del self.unknown_point_cache[-1]
+                    print("Sent initial point")
+
+                self.x_results_log = []
+                self.y_results_log = []
 
                 # Iterate to 0 to get out of the initialization and process
                 # priming state
                 self.time_step += 1
 
-            if self.time_step < self.max_iterations:
-                
-                input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
-                output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
-                self.process_ticker = (self.process_ticker + 1) % self.num_processes
+            if self.time_step >= self.max_iterations:
+                self.finished = 1
+                continue
+
+            for i in range(self.num_processes):    
+                input_port: PyInPort = eval(f"self.input_port_{i}")
                 if input_port.probe():
-                    # print(f"LMAO: {self.time_step}/{self.max_iterations}\r")
-                    start_time: float = time.time()
                     new_data: np.ndarray = input_port.recv()
 
                     x = new_data[:self.num_params]
@@ -313,24 +316,49 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     x = new_data[:self.num_params].tolist()
                     y = new_data[self.num_params:].item()
 
-                    self.optimizer.tell(x, y)
+                    self.x_results_log.append(x)
+                    self.y_results_log.append(y)
 
-                    if len(self.unknown_point_cache) == 0:
-                        self.unknown_point_cache = self.optimizer.ask(
-                            n_points=self.num_processes,
-                            strategy=self.asking_strategy
-                        )
+                    if self.time_step + 1 >= self.num_initial_points:
+                        remainder = (self.time_step + 1 - self.num_initial_points)
+                        remainder %= self.num_processes
 
-                    output_data: np.ndarray = np.array(self.unknown_point_cache[-1])
+                        print(f"Remainder: {remainder} Time Step: {self.time_step + 1}/{self.max_iterations}\r")
 
-                    for idx in range(len(output_data)):
-                        if self.search_space[idx][2] == 2.0:
-                            output_data[idx] = global_search_space_values[idx][int(output_data[idx])]
+                        if remainder == 0:
+                            self.optimizer.tell(self.x_results_log, self.y_results_log)
 
-                    output_port.send(output_data)
-                    del self.unknown_point_cache[-1]
+                            self.unknown_point_cache = self.optimizer.ask(
+                                n_points=self.num_processes,
+                                strategy=self.asking_strategy
+                            )
 
-                    self.time_log[self.time_step] = time.time() - start_time
+                            for j in range(self.num_processes):
+                                output_port: PyOutPort = eval(f"self.output_port_{j}")
+                                next_point = self.unknown_point_cache[-1]
+
+                                for idx in range(len(next_point)):
+                                    if self.search_space[idx][2] == 2.0:
+                                        next_point[idx] = global_search_space_values[idx][next_point[idx]]
+
+                                output_data: np.ndarray = np.array(next_point)
+                                output_port.send(output_data)
+                                del self.unknown_point_cache[-1]
+                                print("Sent new point")
+
+                    else:
+                        print(f"Initial point {self.time_step + 1}/{self.num_initial_points} complete")
+
+                        if len(self.unknown_point_cache) > 0:
+                            output_port: PyOutPort = eval(f"self.output_port_{i}")
+                            output_data: np.ndarray = np.array(self.unknown_point_cache[-1])
+
+                            for idx in range(len(output_data)):
+                                if self.search_space[idx][2] == 2.0:
+                                    output_data[idx] = global_search_space_values[idx][int(output_data[idx])]
+
+                            output_port.send(output_data)
+                            del self.unknown_point_cache[-1]
+                            print("Sent new initial point")
+
                     self.time_step += 1
-            else:
-                self.finished = 1

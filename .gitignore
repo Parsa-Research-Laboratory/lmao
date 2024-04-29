@@ -2,3 +2,4 @@
 lmao.egg-info
 lmao/test_functions/nmnist/data/
 lmao/test_functions/pilotnet/data
+results/**

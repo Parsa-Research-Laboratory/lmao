@@ -61,7 +61,7 @@ class GridOptimizerProcess(BaseOptimizerProcess):
         # -------------------------
         self.max_iterations = Var(
             shape=(1,),
-            init=250
+            init=config.max_iterations
         )
 
         self.seed = Var(
@@ -252,7 +252,7 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
                 # priming state
                 self.time_step += 1
 
-            if self.time_step < self.max_iterations:
+            if self.time_step < self.max_iterations - 1:
                 
                 input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
                 output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
@@ -261,6 +261,8 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
                     start_time: float = time.time()
                     new_data: np.ndarray = input_port.recv()
 
+                    print("time step: ", self.time_step)
+                    print("max iterations: ", self.max_iterations)
                     print("new data: ", new_data)
 
                     x = new_data[:self.num_params]

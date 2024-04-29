@@ -152,7 +152,7 @@ class BOSolver:
 
         while not finished:
             self.optimizer.run(RunContinuous(), Loihi2SimCfg())
-            time.sleep(1)
+            time.sleep(10)
 
             self.optimizer.pause()
 

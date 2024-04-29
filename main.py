@@ -158,7 +158,7 @@ if __name__ == "__main__":
         "time_log": [],
         "results_log": []
     }
-    num_runs = 5
+    num_runs = 3
 
     config_base = get_config()
     config_base.num_processes = config_base.run_idx
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     print(f"Standard Deviation: {np.std(time_log)}")
     print(f"Time Log: {time_log}")
 
-    log_path = f"tmp-d05/{config_base.function}_run{config_base.run_idx}.pkl"
+    log_path = f"tmp-d10/{config_base.function}_run{config_base.run_idx}.pkl"
 
     print(log_path)
 
