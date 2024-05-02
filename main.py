@@ -72,7 +72,7 @@ def get_config() -> DictConfig:
     parser.add_argument(
         "--seed",
         type=int,
-        default=7,
+        default=1,
         help="The random seed to use for the optimization process",
     )
     parser.add_argument(
@@ -145,44 +145,11 @@ def main(config: DictConfig):
         search_space=search_space
     )
 
-    # print(results)
-
     solve_end = time.time()
     total_time = solve_end - solve_start
     print(f"Total Time: {total_time}")
     return total_time, results
 
 if __name__ == "__main__":
-    time_log = []
-    log: dict = {
-        "time_log": [],
-        "results_log": []
-    }
-    num_runs = 3
-
-    config_base = get_config()
-    config_base.num_processes = config_base.run_idx
-
-    print(config_base.num_processes)
-    for i in range(num_runs):
-        config = copy.deepcopy(config_base)
-        config.seed = i
-        times, results = main(config)
-
-        log["time_log"].append(times)
-        log["results_log"].append(results)
-
-    print(f"Number of Runs: {num_runs}")
-    print(f"Average Time: {np.mean(time_log)}")
-    print(f"Standard Deviation: {np.std(time_log)}")
-    print(f"Time Log: {time_log}")
-
-    log_path = f"tmp-d10/{config_base.function}_run{config_base.run_idx}.pkl"
-
-    print(log_path)
-
-    with open(log_path, "wb") as f:
-        pkl.dump(log, f)
-
-
-
+    config = get_config()
+    times, results = main(config)
