@@ -72,7 +72,7 @@ def get_config() -> DictConfig:
     parser.add_argument(
         "--seed",
         type=int,
-        default=1,
+        default=0,
         help="The random seed to use for the optimization process",
     )
     parser.add_argument(
