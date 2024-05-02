@@ -30,9 +30,13 @@ If you run into any issues, please reach out to the maintainer.
 
 (1) George Mason University (2) Intel Labs
 
+---
+
 ### Acknowledgements
 
 This work was supported by a generous gift the Intel corporation.
+
+---
 
 ### Citation
 
