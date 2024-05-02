@@ -316,6 +316,8 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                     x = new_data[:self.num_params].tolist()
                     y = new_data[self.num_params:].item()
 
+                    print(f" - New Data: x={x}, y={y}")
+
                     self.x_results_log.append(x)
                     self.y_results_log.append(y)
 
@@ -323,7 +325,8 @@ class PyAsyncGPROptimizerModel(PyAsyncProcessModel):
                         remainder = (self.time_step + 1 - self.num_initial_points)
                         remainder %= self.num_processes
 
-                        print(f"Remainder: {remainder} Time Step: {self.time_step + 1}/{self.max_iterations}\r")
+                        print(f"Time Step: {self.time_step + 1}/{self.max_iterations}\r")
+
 
                         if remainder == 0:
                             self.optimizer.tell(self.x_results_log, self.y_results_log)
