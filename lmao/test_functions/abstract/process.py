@@ -90,8 +90,6 @@ class PyAbstractFunctionProcessModel(PyLoihiProcessModel):
                 dtype=np.float32
             )
             output_packet[:self.num_params] = input_data
-            output_packet[0] = input_data[0]
-            output_packet[1] = input_data[1]
             output_packet[-1] = y
 
             self.output_port.send(output_packet)
