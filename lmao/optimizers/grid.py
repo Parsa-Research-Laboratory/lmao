@@ -252,7 +252,7 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
                 # priming state
                 self.time_step += 1
 
-            if self.time_step < self.max_iterations - 1:
+            if self.time_step < self.max_iterations:
                 
                 input_port: PyInPort = eval(f"self.input_port_{self.process_ticker}")
                 output_port: PyOutPort = eval(f"self.output_port_{self.process_ticker}")
@@ -285,7 +285,7 @@ class PyAsyncGridOptimizerModel(PyAsyncProcessModel):
                         output_port.send(output_data)
                         del self.grid_points[-1]
 
-                    self.time_log[self.time_step] = time.time() - start_time                    
+                    self.time_log[self.time_step - 1] = time.time() - start_time                    
             else:
                 self.finished = 1
                     
