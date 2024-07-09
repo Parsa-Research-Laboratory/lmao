@@ -43,5 +43,13 @@ This work was supported by a generous gift the Intel corporation.
 If you find LMAO useful in your work, we would appreciate a citation :\)
 
 ```text
-ADD ARXIV CITATION
+@misc{snyder2024parallelizedmultiagentbayesianoptimization,
+      title={Parallelized Multi-Agent Bayesian Optimization in Lava}, 
+      author={Shay Snyder and Derek Gobin and Victoria Clerico and Sumedh R. Risbud and Maryam Parsa},
+      year={2024},
+      eprint={2405.04387},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC},
+      url={https://arxiv.org/abs/2405.04387}, 
+}
 ```
